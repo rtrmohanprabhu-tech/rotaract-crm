@@ -1,0 +1,724 @@
+// ---------------------------------------------------------------------------
+// Rotaract Event Reporting CRM — data model
+//
+// Design rule (§41 of the brief): every number that a report needs lives in a
+// typed column, never only inside prose or a PDF. Prose stays prose; evidence
+// (photos, bills, letters) lives in Google Drive and is referenced by id here.
+// ---------------------------------------------------------------------------
+
+generator client {
+  // Prisma 6.19 "prisma-client" generator: no native query engine binary is
+  // shipped or bundled — queries compile to SQL and run through the pg driver
+  // adapter (see src/lib/prisma.ts). This keeps Vercel bundles small.
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  runtime      = "nodejs"
+  moduleFormat = "esm"
+  engineType   = "client"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ============================== ENUMS ======================================
+
+enum Role {
+  SUPER_ADMIN
+  PRESIDENT
+  SECRETARY
+  DIRECTOR
+  BOARD_MEMBER
+  VIEWER
+}
+
+enum EventStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  CORRECTION_REQUIRED
+  APPROVED
+  ARCHIVED
+}
+
+enum EventType {
+  PHYSICAL
+  ONLINE
+  HYBRID
+}
+
+enum OrgType {
+  ROTARY_CLUB
+  ROTARACT_CLUB
+  NGO
+  SCHOOL
+  COLLEGE
+  UNIVERSITY
+  CORPORATE
+  GOVERNMENT
+  COMMUNITY_ORG
+  OTHER
+}
+
+enum FundingSource {
+  CLUB_FUND
+  ROTARY_CLUB
+  SPONSOR
+  DONATION
+  MEMBER_CONTRIBUTION
+  PARTNER_ORGANIZATION
+  OTHER
+}
+
+enum BeneficiaryCategory {
+  CHILDREN
+  STUDENTS
+  WOMEN
+  MEN
+  SENIOR_CITIZENS
+  PATIENTS
+  FAMILIES
+  SCHOOL_STUDENTS
+  COLLEGE_STUDENTS
+  DIFFERENTLY_ABLED
+  GENERAL_PUBLIC
+  COMMUNITY
+  ENVIRONMENT
+  ANIMALS
+  ROTARACTORS
+  OTHER
+}
+
+enum ParticipantGroup {
+  ROTARACTOR
+  ROTARIAN
+  COUNCIL
+  GUEST
+}
+
+enum DocumentCategory {
+  POSTER
+  ATTENDANCE_SHEET
+  BILL
+  INVOICE
+  PERMISSION_LETTER
+  APPRECIATION_LETTER
+  CERTIFICATE
+  NEWSPAPER_COVERAGE
+  SOCIAL_MEDIA_SCREENSHOT
+  GENERATED_REPORT
+  OTHER
+}
+
+enum SocialPlatform {
+  INSTAGRAM
+  FACEBOOK
+  LINKEDIN
+  YOUTUBE
+  WEBSITE
+  OTHER
+}
+
+enum DriveSyncStatus {
+  NOT_REQUIRED
+  PENDING
+  SYNCING
+  SYNCED
+  FAILED
+}
+
+enum ReviewDecision {
+  APPROVED
+  CORRECTION_REQUESTED
+  REJECTED
+  COMMENT
+}
+
+enum NotificationType {
+  EVENT_SUBMITTED
+  EVENT_APPROVED
+  CORRECTION_REQUESTED
+  EVENT_RESUBMITTED
+  REPORT_OVERDUE
+  REVIEW_PENDING
+  DRIVE_SYNC_FAILED
+  GENERIC
+}
+
+enum ReportKind {
+  EVENT
+  MONTHLY
+  AVENUE
+  ANNUAL
+}
+
+// ============================== AUTH =======================================
+// Auth.js (NextAuth v5) models. Credentials login uses User.passwordHash.
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  phone         String?
+  passwordHash  String?
+  role          Role      @default(BOARD_MEMBER)
+  isActive      Boolean   @default(true)
+
+  boardPositionId String?
+  boardPosition   BoardPosition? @relation(fields: [boardPositionId], references: [id], onDelete: SetNull)
+
+  // Directors own an avenue: they review everything filed under it.
+  avenueId String?
+  avenue   Avenue? @relation("UserAvenue", fields: [avenueId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  accounts Account[]
+  sessions Session[]
+
+  createdEvents   Event[] @relation("EventCreator")
+  chairedEvents   Event[] @relation("EventChair")
+  secretaryEvents Event[] @relation("EventSecretary")
+  directorEvents  Event[] @relation("EventDirector")
+
+  reviews       EventReview[]
+  comments      EventComment[]
+  statusChanges EventStatusHistory[]
+  notifications Notification[]
+  auditLogs     AuditLog[]
+  participations EventParticipant[]
+  generatedReports GeneratedReport[]
+  driveCredential DriveCredential?
+
+  @@index([role])
+  @@index([avenueId])
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ============================== CLUB CONFIG ================================
+
+model ClubSettings {
+  id                String @id @default("club")
+  clubName          String @default("Rotaract Club")
+  rotarySponsor     String @default("")
+  clubId            String @default("")
+  groupName         String @default("")
+  riDistrict        String @default("")
+  presidentName     String @default("")
+  secretaryName     String @default("")
+  currentYear       String @default("2026-27") // Rotaract year label
+  currency          String @default("INR")
+  logoUrl           String?
+
+  // Reporting policy — all admin-configurable (§27)
+  minPhotos            Int      @default(3)
+  maxPhotos            Int      @default(20)
+  reportingDeadlineHrs Int      @default(48)
+  requiredFields       String[] @default(["eventName", "eventDate", "avenueId", "chairId", "venue", "participation", "beneficiaries", "description", "photos"])
+
+  // Google Drive
+  driveRootFolderId  String?
+  driveRootFolderUrl String?
+  driveConnectedById String?
+  driveConnectedAt   DateTime?
+
+  // Report builder toggles (§53)
+  reportSections Json @default("{\"eventName\":true,\"chair\":true,\"date\":true,\"avenue\":true,\"cost\":true,\"beneficiaries\":true,\"participation\":true,\"venue\":true,\"description\":true,\"impact\":true,\"collaboration\":true,\"socialMedia\":false,\"photos\":true,\"internalNotes\":false,\"reviewerComments\":false}")
+
+  aiEnabled Boolean @default(true)
+
+  updatedAt DateTime @updatedAt
+
+  @@map("club_settings")
+}
+
+model Avenue {
+  id        String  @id @default(cuid())
+  name      String  @unique
+  slug      String  @unique
+  color     String  @default("#cd2a63")
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+
+  events    Event[]
+  directors User[]  @relation("UserAvenue")
+
+  @@map("avenues")
+}
+
+model BoardPosition {
+  id        String  @id @default(cuid())
+  title     String  @unique
+  sortOrder Int     @default(0)
+  users     User[]
+
+  @@map("board_positions")
+}
+
+model Project {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  slug        String  @unique
+  description String?
+  isActive    Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  events    Event[]
+
+  @@map("projects")
+}
+
+// ============================== EVENTS =====================================
+
+model Event {
+  id      String @id @default(cuid())
+  eventId String @unique // Human-readable: EVT-2026-0001
+
+  eventName String
+  eventDate DateTime
+  startTime String? // "11:30" — 24h local clock
+  endTime   String?
+  eventType EventType @default(PHYSICAL)
+
+  avenueId String
+  avenue   Avenue @relation(fields: [avenueId], references: [id])
+
+  // Leadership
+  chairId       String?
+  chair         User?   @relation("EventChair", fields: [chairId], references: [id], onDelete: SetNull)
+  chairNameText String? // fallback when the chair is not a system user
+  secretaryId   String?
+  secretary     User?   @relation("EventSecretary", fields: [secretaryId], references: [id], onDelete: SetNull)
+  directorId    String?
+  director      User?   @relation("EventDirector", fields: [directorId], references: [id], onDelete: SetNull)
+
+  // Venue / platform
+  venue       String?
+  address     String?
+  city        String?
+  district    String?
+  state       String?
+  country     String? @default("India")
+  platform    String?
+  meetingLink String?
+
+  // Collaboration
+  isCollaboration Boolean @default(false)
+  projectWith     String  @default("SELF")
+
+  // Participation (typed — never parsed back out of prose)
+  rotaractorsPresent Int @default(0)
+  rotariansPresent   Int @default(0)
+  councilPresent     Int @default(0)
+  guestsPresent      Int @default(0)
+  totalParticipants  Int @default(0) // derived, stored for fast analytics
+
+  // Beneficiaries
+  directBeneficiaries   Int     @default(0)
+  indirectBeneficiaries Int     @default(0)
+  totalBeneficiaries    Int     @default(0) // derived
+  beneficiaryNotes      String?
+
+  // Financials
+  hasExpenses   Boolean        @default(false)
+  eventCost     Decimal        @default(0) @db.Decimal(12, 2)
+  currency      String         @default("INR")
+  fundingSource FundingSource?
+  sponsorName   String?
+  expenseNotes  String?
+
+  // Narrative
+  description   String? @db.Text
+  rawDescription String? @db.Text // what the member typed before AI polish
+  objective     String? @db.Text
+  accomplished  String? @db.Text
+  impact        String? @db.Text
+  specialOutcome String? @db.Text
+  feedback      String? @db.Text
+  internalNotes String? @db.Text
+
+  // Project / phase
+  projectId   String?
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  projectName String?
+  phaseNumber Int?
+
+  // Workflow
+  status         EventStatus @default(DRAFT)
+  completeness   Int         @default(0)
+  submittedAt    DateTime?
+  approvedAt     DateTime?
+  approvedById   String?
+  lockedForEdits Boolean     @default(false)
+
+  // Drive
+  driveSyncStatus DriveSyncStatus @default(PENDING)
+  driveSyncError  String?
+  driveSyncedAt   DateTime?
+
+  createdById String
+  createdBy   User   @relation("EventCreator", fields: [createdById], references: [id])
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime? // soft delete (§63)
+
+  beneficiaries  EventBeneficiary[]
+  participants   EventParticipant[]
+  collaborators  EventCollaborator[]
+  expenses       EventExpense[]
+  photos         EventPhoto[]
+  documents      EventDocument[]
+  socialLinks    EventSocialLink[]
+  reviews        EventReview[]
+  comments       EventComment[]
+  statusHistory  EventStatusHistory[]
+  driveFolder    DriveFolder?
+  driveFiles     DriveFile[]
+  reports        GeneratedReport[]
+
+  @@index([status])
+  @@index([eventDate])
+  @@index([avenueId])
+  @@index([createdById])
+  @@index([chairId])
+  @@index([projectId])
+  @@map("events")
+}
+
+model EventBeneficiary {
+  id       String              @id @default(cuid())
+  eventId  String
+  event    Event               @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  category BeneficiaryCategory
+  note     String?
+
+  @@unique([eventId, category])
+  @@map("event_beneficiaries")
+}
+
+/// Optional named attendance on top of the headcounts.
+model EventParticipant {
+  id      String           @id @default(cuid())
+  eventId String
+  event   Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  group   ParticipantGroup
+  userId  String?
+  user    User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  name    String?
+
+  @@index([eventId])
+  @@map("event_participants")
+}
+
+model EventCollaborator {
+  id           String  @id @default(cuid())
+  eventId      String
+  event        Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  orgType      OrgType @default(OTHER)
+  orgName      String
+  contactName  String?
+  contactEmail String?
+  contactPhone String?
+
+  @@index([eventId])
+  @@map("event_collaborators")
+}
+
+model EventExpense {
+  id        String  @id @default(cuid())
+  eventId   String
+  event     Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  label     String
+  amount    Decimal @db.Decimal(12, 2)
+  notes     String?
+
+  @@index([eventId])
+  @@map("event_expenses")
+}
+
+model EventPhoto {
+  id       String  @id @default(cuid())
+  eventId  String
+  event    Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  fileName String
+  mimeType String
+  size     Int
+  width    Int?
+  height   Int?
+  caption  String?
+  sortOrder Int    @default(0)
+
+  storagePath  String  // local/staged original
+  thumbnailPath String?
+  driveFileId  String?
+  driveFileUrl String?
+  syncStatus   DriveSyncStatus @default(PENDING)
+
+  uploadedAt DateTime @default(now())
+
+  @@index([eventId, sortOrder])
+  @@map("event_photos")
+}
+
+model EventDocument {
+  id       String           @id @default(cuid())
+  eventId  String
+  event    Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  category DocumentCategory @default(OTHER)
+  fileName String
+  mimeType String
+  size     Int
+  label    String?
+
+  storagePath  String
+  driveFileId  String?
+  driveFileUrl String?
+  syncStatus   DriveSyncStatus @default(PENDING)
+
+  uploadedAt DateTime @default(now())
+
+  @@index([eventId, category])
+  @@map("event_documents")
+}
+
+model EventSocialLink {
+  id       String         @id @default(cuid())
+  eventId  String
+  event    Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  platform SocialPlatform
+  url      String
+
+  @@index([eventId])
+  @@map("event_social_links")
+}
+
+// ============================== REVIEW / AUDIT =============================
+
+model EventReview {
+  id         String         @id @default(cuid())
+  eventId    String
+  event      Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  reviewerId String
+  reviewer   User           @relation(fields: [reviewerId], references: [id])
+  decision   ReviewDecision
+  note       String?        @db.Text
+  createdAt  DateTime       @default(now())
+
+  @@index([eventId])
+  @@map("event_reviews")
+}
+
+model EventComment {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  body      String   @db.Text
+  isInternal Boolean @default(false)
+  resolvedAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([eventId])
+  @@map("event_comments")
+}
+
+model EventStatusHistory {
+  id        String      @id @default(cuid())
+  eventId   String
+  event     Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  from      EventStatus?
+  to        EventStatus
+  actorId   String?
+  actor     User?       @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  note      String?
+  createdAt DateTime    @default(now())
+
+  @@index([eventId])
+  @@map("event_status_history")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  actorLabel String?
+  action     String // e.g. "event.submit"
+  entityType String
+  entityId   String
+  summary    String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model Notification {
+  id      String           @id @default(cuid())
+  userId  String
+  user    User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type    NotificationType @default(GENERIC)
+  title   String
+  body    String?
+  link    String?
+  readAt  DateTime?
+  createdAt DateTime       @default(now())
+
+  @@index([userId, readAt])
+  @@map("notifications")
+}
+
+// ============================== GOOGLE DRIVE ===============================
+
+/// One folder per event (1:1, §17). Year/avenue/month folders are cached in
+/// DriveFolderCache so we never re-create the same tree twice.
+model DriveFolder {
+  id       String @id @default(cuid())
+  eventId  String @unique
+  event    Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  folderId  String
+  folderUrl String
+  path      String // "2026-27/Community Service/January 2026/EVT-2026-0001_Care2Cook"
+
+  photosFolderId    String?
+  posterFolderId    String?
+  documentsFolderId String?
+  financialsFolderId String?
+  socialFolderId    String?
+  reportFolderId    String?
+
+  createdAt DateTime @default(now())
+  files     DriveFile[]
+
+  @@map("drive_folders")
+}
+
+model DriveFolderCache {
+  id        String   @id @default(cuid())
+  path      String   @unique
+  folderId  String
+  createdAt DateTime @default(now())
+
+  @@map("drive_folder_cache")
+}
+
+model DriveFile {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  folderId  String?
+  folder    DriveFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+
+  driveFileId String
+  name        String
+  mimeType    String
+  size        Int?
+  webViewLink String?
+  sourceType  String // "photo" | "document" | "report"
+  sourceId    String?
+  createdAt   DateTime @default(now())
+
+  @@index([eventId])
+  @@map("drive_files")
+}
+
+/// Refresh token of the admin account that authorised Drive access.
+/// Stored server-side only; never sent to the browser.
+model DriveCredential {
+  id           String   @id @default("drive")
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshToken String   @db.Text
+  scope        String
+  updatedAt    DateTime @updatedAt
+
+  @@map("drive_credentials")
+}
+
+model GeneratedReport {
+  id        String     @id @default(cuid())
+  kind      ReportKind
+  title     String
+  fileName  String
+  storagePath String
+  eventId   String?
+  event     Event?     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  periodKey String? // "2026-01" | "2026-27" | avenue slug
+  filters   Json?
+
+  driveFileId  String?
+  driveFileUrl String?
+  syncStatus   DriveSyncStatus @default(PENDING)
+
+  generatedById String?
+  generatedBy   User?    @relation(fields: [generatedById], references: [id], onDelete: SetNull)
+  createdAt     DateTime @default(now())
+
+  @@index([kind, periodKey])
+  @@map("generated_reports")
+}
+
+/// Background job queue for Drive sync retries (§36).
+model SyncJob {
+  id         String   @id @default(cuid())
+  eventId    String
+  kind       String // "event_folder" | "photo" | "document" | "report"
+  targetId   String?
+  attempts   Int      @default(0)
+  lastError  String?
+  nextRunAt  DateTime @default(now())
+  completedAt DateTime?
+  createdAt  DateTime @default(now())
+
+  @@index([completedAt, nextRunAt])
+  @@map("sync_jobs")
+}
