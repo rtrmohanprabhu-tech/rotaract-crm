@@ -49,7 +49,7 @@ async function main() {
 
   const board = members.find((m) => m.role === 'BOARD_MEMBER');
   const president = members.find((m) => m.role === 'PRESIDENT');
-  const secretary = members.find((m) => m.role === 'SECRETARY');
+  const secretary = members.find((m) => m.role === 'SECRETARY_ADMIN');
   if (!board || !president || !secretary) throw new Error('Run `npm run db:seed` first.');
   const communityService = avenues.find((a) => a.name === 'Community Service') ?? avenues[0];
 
