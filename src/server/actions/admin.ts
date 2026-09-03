@@ -66,7 +66,8 @@ export async function upsertMemberAction(id: string | null, raw: unknown): Promi
     ...data,
     email,
     phone: data.phone || null,
-    boardPositionId: boardPositionId || null,
+    rotaractId: data.rotaractId || null,
+    boardPositionId,
     avenueId: avenueId || null,
     ...(password ? { passwordHash: await bcrypt.hash(password, 12) } : {}),
   };

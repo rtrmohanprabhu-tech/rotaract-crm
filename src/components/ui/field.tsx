@@ -3,10 +3,9 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 
-let idCounter = 0;
 function useId(explicit?: string) {
-  const [id] = React.useState(() => explicit ?? `field-${++idCounter}`);
-  return explicit ?? id;
+  const generated = React.useId();
+  return explicit ?? generated;
 }
 
 type FieldProps = {

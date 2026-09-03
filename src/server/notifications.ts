@@ -28,7 +28,7 @@ export async function reviewerIds(avenueId?: string | null): Promise<string[]> {
       isActive: true,
       deletedAt: null,
       OR: [
-        { role: { in: ['SUPER_ADMIN', 'PRESIDENT', 'SECRETARY'] } },
+        { role: { in: ['SUPER_ADMIN', 'PRESIDENT', 'SECRETARY_ADMIN', 'REVIEWER'] } },
         ...(avenueId ? [{ role: 'DIRECTOR' as const, avenueId }] : []),
       ],
     },

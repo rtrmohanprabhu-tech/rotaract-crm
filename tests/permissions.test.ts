@@ -13,7 +13,9 @@ import {
 const boardMember = { id: 'u-board', role: 'BOARD_MEMBER' as const };
 const otherMember = { id: 'u-other', role: 'BOARD_MEMBER' as const };
 const president = { id: 'u-pres', role: 'PRESIDENT' as const };
-const secretary = { id: 'u-sec', role: 'SECRETARY' as const };
+const secretary = { id: 'u-sec', role: 'SECRETARY_ADMIN' as const };
+const secretaryComms = { id: 'u-sec-comms', role: 'SECRETARY_COMMUNICATION' as const };
+const reviewer = { id: 'u-reviewer', role: 'REVIEWER' as const };
 const directorCS = { id: 'u-dir', role: 'DIRECTOR' as const, avenueId: 'av-cs' };
 const viewer = { id: 'u-view', role: 'VIEWER' as const };
 const admin = { id: 'u-admin', role: 'SUPER_ADMIN' as const };
@@ -42,6 +44,28 @@ describe('role permissions', () => {
     expect(nav.members).toBe(false);
     expect(nav.settings).toBe(false);
     expect(nav.reportEvent).toBe(true);
+  });
+
+  it('gives the president members access alongside review powers', () => {
+    expect(can(president, 'members.manage')).toBe(true);
+    const nav = visibleNav('PRESIDENT');
+    expect(nav.members).toBe(true);
+  });
+
+  it('lets secretary communication edit any event but not review or manage members', () => {
+    expect(can(secretaryComms, 'event.editAny')).toBe(true);
+    expect(can(secretaryComms, 'event.review')).toBe(false);
+    expect(can(secretaryComms, 'members.manage')).toBe(false);
+  });
+
+  it('gives reviewers review/approve access without event creation or members', () => {
+    expect(can(reviewer, 'event.review')).toBe(true);
+    expect(can(reviewer, 'event.approve')).toBe(true);
+    expect(can(reviewer, 'event.create')).toBe(false);
+    expect(can(reviewer, 'members.manage')).toBe(false);
+    const nav = visibleNav('REVIEWER');
+    expect(nav.reviews).toBe(true);
+    expect(nav.reportEvent).toBe(false);
   });
 });
 

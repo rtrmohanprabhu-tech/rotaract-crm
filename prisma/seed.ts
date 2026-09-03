@@ -369,13 +369,13 @@ async function main() {
   console.log('Seeding Rotaract Event Reporting CRM…');
 
   const clubDefaults = {
-    clubName: 'Rotaract Club of Sample College of Arts and Science',
+    clubName: 'Rotaract Club of Sri Ramakrishna College of Arts and Science',
     rotarySponsor: 'Rotary Club of Sample City Midtown',
     clubId: '0000',
     groupName: '01',
     riDistrict: '3206',
-    presidentName: 'Rtr. Vinith',
-    secretaryName: 'Rtr. Dhanush',
+    presidentName: 'Rtr. Mohan Prabhu',
+    secretaryName: 'Rtr. Rithika',
     currentYear: '2026-27',
     currency: 'INR',
     minPhotos: 3,
@@ -410,7 +410,7 @@ async function main() {
   const people = [
     { name: 'Rtr. Admin', email: 'admin@rotaract.demo', role: 'SUPER_ADMIN' as const, position: null, avenue: null },
     { name: 'Rtr. Vinith', email: 'president@rotaract.demo', role: 'PRESIDENT' as const, position: 'President', avenue: null },
-    { name: 'Rtr. Dhanush', email: 'secretary@rotaract.demo', role: 'SECRETARY' as const, position: 'Secretary — Administration', avenue: null },
+    { name: 'Rtr. Dhanush', email: 'secretary@rotaract.demo', role: 'SECRETARY_ADMIN' as const, position: 'Secretary — Administration', avenue: null },
     {
       name: 'Rtr. Kanishka',
       email: 'director.cs@rotaract.demo',
@@ -421,7 +421,14 @@ async function main() {
     { name: 'Rtr. Akshaya Lakshmi', email: 'akshaya@rotaract.demo', role: 'BOARD_MEMBER' as const, position: 'Member', avenue: null },
     { name: 'Rtr. Santhiya', email: 'santhiya@rotaract.demo', role: 'BOARD_MEMBER' as const, position: 'Member', avenue: null },
     { name: 'Rtr. Hashish Laa', email: 'hashish@rotaract.demo', role: 'BOARD_MEMBER' as const, position: 'Editor', avenue: null },
-    { name: 'Rtr. Krishna Rajpurohit', email: 'krishna@rotaract.demo', role: 'BOARD_MEMBER' as const, position: 'Secretary — Communication', avenue: null },
+    {
+      name: 'Rtr. Krishna Rajpurohit',
+      email: 'krishna@rotaract.demo',
+      role: 'SECRETARY_COMMUNICATION' as const,
+      position: 'Secretary — Communication',
+      avenue: null,
+    },
+    { name: 'Rtr. Reviewer', email: 'reviewer@rotaract.demo', role: 'REVIEWER' as const, position: 'Member', avenue: null },
     { name: 'Rtr. Member', email: 'member@rotaract.demo', role: 'VIEWER' as const, position: 'Member', avenue: null },
   ];
 

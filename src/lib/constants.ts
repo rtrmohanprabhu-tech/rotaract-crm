@@ -12,9 +12,11 @@ import type {
 export const ROLE_LABELS: Record<Role, string> = {
   SUPER_ADMIN: 'Super Admin',
   PRESIDENT: 'President',
-  SECRETARY: 'Secretary',
+  SECRETARY_ADMIN: 'Secretary — Administration',
+  SECRETARY_COMMUNICATION: 'Secretary — Communication',
   DIRECTOR: 'Director',
   BOARD_MEMBER: 'Board Member',
+  REVIEWER: 'Reviewer',
   VIEWER: 'Member / Viewer',
 };
 

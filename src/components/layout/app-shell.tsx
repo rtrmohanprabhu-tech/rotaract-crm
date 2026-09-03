@@ -12,6 +12,7 @@ import {
   FileText,
   FolderOpen,
   HardDrive,
+  History,
   Layers,
   LayoutDashboard,
   LogOut,
@@ -41,6 +42,7 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   Users,
   HardDrive,
   Settings,
+  History,
 };
 
 export function AppShell({

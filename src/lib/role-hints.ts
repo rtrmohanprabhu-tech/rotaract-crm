@@ -17,11 +17,17 @@ export const ROLE_PERMISSION_HINTS: Record<Role, string[]> = {
     'Generate monthly, avenue and annual reports',
     'Export event data and view analytics',
   ],
-  SECRETARY: [
+  SECRETARY_ADMIN: [
     'See every event in the club',
     'Review, request corrections and approve',
     'Generate and export reports',
     'View analytics and reporting health',
+    'Manage club members',
+  ],
+  SECRETARY_COMMUNICATION: [
+    'See every event in the club',
+    'Edit any event’s communication details — poster, social links, description',
+    'Report your own events',
   ],
   DIRECTOR: [
     'See events filed under your avenue',
@@ -34,6 +40,11 @@ export const ROLE_PERMISSION_HINTS: Record<Role, string[]> = {
     'Upload photos and evidence',
     'Submit reports and respond to correction requests',
     'See your own submissions',
+  ],
+  REVIEWER: [
+    'See every submitted report awaiting review',
+    'Approve reports or request corrections',
+    'Cannot create events or manage members',
   ],
   VIEWER: ['Read approved reports'],
 };

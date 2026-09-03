@@ -77,7 +77,15 @@ describe('member validation', () => {
   });
 
   it('rejects a short password but allows an empty one', () => {
-    expect(memberSchema.safeParse({ name: 'Rtr. A', email: 'a@b.com', role: 'BOARD_MEMBER', password: 'short' }).success).toBe(false);
-    expect(memberSchema.safeParse({ name: 'Rtr. A', email: 'a@b.com', role: 'BOARD_MEMBER', password: '' }).success).toBe(true);
+    const base = { name: 'Rtr. A', email: 'a@b.com', role: 'BOARD_MEMBER' as const, boardPositionId: 'pos-1' };
+    expect(memberSchema.safeParse({ ...base, password: 'short' }).success).toBe(false);
+    expect(memberSchema.safeParse({ ...base, password: '' }).success).toBe(true);
+  });
+
+  it('requires a designation (board position)', () => {
+    expect(memberSchema.safeParse({ name: 'Rtr. A', email: 'a@b.com', role: 'BOARD_MEMBER' }).success).toBe(false);
+    expect(
+      memberSchema.safeParse({ name: 'Rtr. A', email: 'a@b.com', role: 'BOARD_MEMBER', boardPositionId: 'pos-1' }).success,
+    ).toBe(true);
   });
 });

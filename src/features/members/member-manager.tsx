@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { Pencil, Plus, UserCheck, UserX, X } from 'lucide-react';
+import { Camera, Pencil, Plus, Search, UserCheck, UserX, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Field, Input, Select, Toggle } from '@/components/ui/field';
 import { Avatar } from '@/components/ui/misc';
@@ -16,6 +16,7 @@ export type MemberRow = {
   name: string;
   email: string;
   phone: string | null;
+  rotaractId: string | null;
   role: Role;
   isActive: boolean;
   image: string | null;
@@ -24,6 +25,12 @@ export type MemberRow = {
   boardPosition: { title: string } | null;
   _count?: { createdEvents: number };
 };
+
+const STATUS_OPTIONS = [
+  { value: 'ALL', label: 'All statuses' },
+  { value: 'ACTIVE', label: 'Active' },
+  { value: 'INACTIVE', label: 'Inactive' },
+] as const;
 
 export function MemberManager({
   members,
@@ -39,10 +46,65 @@ export function MemberManager({
   const router = useRouter();
   const toast = useToast();
   const [editing, setEditing] = React.useState<MemberRow | 'new' | null>(null);
+  const [search, setSearch] = React.useState('');
+  const [statusFilter, setStatusFilter] = React.useState<(typeof STATUS_OPTIONS)[number]['value']>('ALL');
+  const [roleFilter, setRoleFilter] = React.useState<Role | 'ALL'>('ALL');
+  const [positionFilter, setPositionFilter] = React.useState<string>('ALL');
+
+  const filtered = React.useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return members.filter((m) => {
+      if (q && !`${m.name} ${m.email}`.toLowerCase().includes(q)) return false;
+      if (statusFilter === 'ACTIVE' && !m.isActive) return false;
+      if (statusFilter === 'INACTIVE' && m.isActive) return false;
+      if (roleFilter !== 'ALL' && m.role !== roleFilter) return false;
+      if (positionFilter !== 'ALL' && m.boardPositionId !== positionFilter) return false;
+      return true;
+    });
+  }, [members, search, statusFilter, roleFilter, positionFilter]);
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="relative sm:col-span-2 lg:col-span-2">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by name or email…"
+            className="pl-9"
+            aria-label="Search members"
+          />
+        </div>
+        <Select aria-label="Filter by status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as never)}>
+          {STATUS_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </Select>
+        <Select aria-label="Filter by role" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value as never)}>
+          <option value="ALL">All roles</option>
+          {Object.entries(ROLE_LABELS).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </Select>
+        <Select aria-label="Filter by board position" value={positionFilter} onChange={(e) => setPositionFilter(e.target.value)}>
+          <option value="ALL">All board positions</option>
+          {positions.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.title}
+            </option>
+          ))}
+        </Select>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-ink-500">
+          {filtered.length} of {members.length} member{members.length === 1 ? '' : 's'}
+        </p>
         <Button onClick={() => setEditing('new')}>
           <Plus className="h-4 w-4" /> Add member
         </Button>
@@ -62,7 +124,7 @@ export function MemberManager({
       ) : null}
 
       <div className="overflow-x-auto rounded-2xl border border-ink-200 bg-white">
-        <table className="w-full min-w-[720px] text-left text-sm">
+        <table className="w-full min-w-[820px] text-left text-sm">
           <thead>
             <tr className="border-b border-ink-200 text-xs uppercase tracking-wide text-ink-500">
               <th className="px-4 py-3 font-medium">Member</th>
@@ -75,7 +137,7 @@ export function MemberManager({
             </tr>
           </thead>
           <tbody className="divide-y divide-ink-100">
-            {members.map((member) => (
+            {filtered.map((member) => (
               <tr key={member.id} className={member.isActive ? '' : 'opacity-60'}>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
@@ -127,6 +189,13 @@ export function MemberManager({
                 </td>
               </tr>
             ))}
+            {filtered.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="px-4 py-8 text-center text-sm text-ink-500">
+                  No members match these filters.
+                </td>
+              </tr>
+            ) : null}
           </tbody>
         </table>
       </div>
@@ -152,6 +221,7 @@ function MemberForm({
     name: member?.name ?? '',
     email: member?.email ?? '',
     phone: member?.phone ?? '',
+    rotaractId: member?.rotaractId ?? '',
     role: (member?.role ?? 'BOARD_MEMBER') as Role,
     boardPositionId: member?.boardPositionId ?? '',
     avenueId: member?.avenueId ?? '',
@@ -160,8 +230,21 @@ function MemberForm({
   });
   const [errors, setErrors] = React.useState<Record<string, string>>({});
   const [pending, setPending] = React.useState(false);
+  const [photoFile, setPhotoFile] = React.useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = React.useState<string | null>(member?.image ?? null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const set = (key: keyof typeof values, value: unknown) => setValues((c) => ({ ...c, [key]: value }));
+
+  async function uploadPhoto(memberId: string, file: File) {
+    const form = new FormData();
+    form.append('file', file);
+    const res = await fetch(`/api/members/${memberId}/photo`, { method: 'POST', body: form });
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      toast.error('Photo not saved', data.error ?? 'The member was saved, but the photo upload failed.');
+    }
+  }
 
   return (
     <form
@@ -170,21 +253,55 @@ function MemberForm({
         e.preventDefault();
         setPending(true);
         const result = await upsertMemberAction(member?.id ?? null, values);
-        setPending(false);
         if (!result.ok) {
+          setPending(false);
           setErrors(result.fieldErrors ?? {});
           toast.error('Member not saved', result.message);
           return;
         }
+        if (photoFile && result.data?.id) {
+          await uploadPhoto(result.data.id, photoFile);
+        }
+        setPending(false);
         toast.success(result.message ?? 'Saved');
         onDone();
       }}
     >
       <div className="flex items-center justify-between">
-        <h3 className="text-base font-semibold text-ink-800">{member ? `Edit ${member.name}` : 'Add a board member'}</h3>
+        <h3 className="text-base font-semibold text-ink-800">{member ? `Edit ${member.name}` : 'Add a member'}</h3>
         <button type="button" onClick={onCancel} aria-label="Close" className="rounded-lg p-2 text-ink-400 hover:bg-ink-100">
           <X className="h-4 w-4" />
         </button>
+      </div>
+
+      <div className="flex items-center gap-4">
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="group relative"
+          aria-label="Upload profile photo"
+        >
+          <Avatar name={values.name || 'New member'} src={photoPreview} size={56} />
+          <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-brand-600 text-white shadow-sm transition group-hover:bg-brand-700">
+            <Camera className="h-3.5 w-3.5" />
+          </span>
+        </button>
+        <div className="text-xs text-ink-500">
+          <p className="font-medium text-ink-700">Profile photo (optional)</p>
+          <p>JPG, PNG or WEBP.</p>
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/jpg,image/png,image/webp"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            setPhotoFile(file);
+            setPhotoPreview(URL.createObjectURL(file));
+          }}
+        />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -194,8 +311,19 @@ function MemberForm({
         <Field label="Email" required error={errors.email} hint="This is also their Google sign-in address.">
           {(props) => <Input {...props} type="email" value={values.email} onChange={(e) => set('email', e.target.value)} />}
         </Field>
-        <Field label="Phone" optional>
-          {(props) => <Input {...props} value={values.phone} onChange={(e) => set('phone', e.target.value)} />}
+        <Field label="Designation" required error={errors.boardPositionId} hint="Their board position or title in the club.">
+          {(props) => (
+            <Select {...props} value={values.boardPositionId} onChange={(e) => set('boardPositionId', e.target.value)}>
+              <option value="" disabled>
+                Select a designation…
+              </option>
+              {positions.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.title}
+                </option>
+              ))}
+            </Select>
+          )}
         </Field>
         <Field label="Role" required>
           {(props) => (
@@ -208,17 +336,11 @@ function MemberForm({
             </Select>
           )}
         </Field>
-        <Field label="Board position" optional>
-          {(props) => (
-            <Select {...props} value={values.boardPositionId} onChange={(e) => set('boardPositionId', e.target.value)}>
-              <option value="">None</option>
-              {positions.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.title}
-                </option>
-              ))}
-            </Select>
-          )}
+        <Field label="Phone" optional>
+          {(props) => <Input {...props} value={values.phone} onChange={(e) => set('phone', e.target.value)} />}
+        </Field>
+        <Field label="Rotaract ID" optional>
+          {(props) => <Input {...props} value={values.rotaractId} onChange={(e) => set('rotaractId', e.target.value)} />}
         </Field>
         <Field label="Avenue (for directors)" optional hint="Directors review the reports filed under their avenue.">
           {(props) => (

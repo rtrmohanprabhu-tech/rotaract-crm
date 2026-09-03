@@ -36,13 +36,17 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   PRESIDENT: P(
     'event.create', 'event.viewAll', 'event.viewAvenue', 'event.viewOwn', 'event.review',
     'event.approve', 'event.unlock', 'report.generate', 'analytics.view', 'export.data', 'projects.manage',
+    'members.manage',
   ),
-  SECRETARY: P(
+  SECRETARY_ADMIN: P(
     'event.create', 'event.viewAll', 'event.viewAvenue', 'event.viewOwn', 'event.review',
     'event.approve', 'report.generate', 'analytics.view', 'export.data', 'projects.manage',
+    'members.manage',
   ),
+  SECRETARY_COMMUNICATION: P('event.create', 'event.viewAll', 'event.viewOwn', 'event.editAny'),
   DIRECTOR: P('event.create', 'event.viewAvenue', 'event.viewOwn', 'event.review', 'event.approve', 'analytics.view'),
   BOARD_MEMBER: P('event.create', 'event.viewOwn'),
+  REVIEWER: P('event.viewAll', 'event.review', 'event.approve'),
   VIEWER: P(),
 };
 
@@ -67,7 +71,7 @@ export function can(actor: ActorLike | null | undefined, permission: Permission)
 }
 
 export function isAdminRole(role: Role) {
-  return role === 'SUPER_ADMIN' || role === 'PRESIDENT' || role === 'SECRETARY';
+  return role === 'SUPER_ADMIN' || role === 'PRESIDENT' || role === 'SECRETARY_ADMIN';
 }
 
 /** Directors review their own avenue only; admins see everything. */
@@ -125,7 +129,6 @@ export function canDeleteEvent(actor: ActorLike | null | undefined, event: Event
 
 /** Which nav entries a role can see (§60, §61). */
 export function visibleNav(role: Role) {
-  const admin = isAdminRole(role);
   return {
     dashboard: true,
     myEvents: true,
@@ -135,8 +138,9 @@ export function visibleNav(role: Role) {
     analytics: can({ id: '', role }, 'analytics.view'),
     reports: can({ id: '', role }, 'report.generate'),
     projects: true,
-    members: admin,
+    members: can({ id: '', role }, 'members.manage'),
     drive: can({ id: '', role }, 'drive.manage'),
     settings: can({ id: '', role }, 'settings.manage'),
+    activity: role === 'SUPER_ADMIN',
   };
 }

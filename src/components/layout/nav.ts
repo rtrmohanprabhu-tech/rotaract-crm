@@ -22,6 +22,7 @@ const ALL: NavItem[] = [
   { key: 'members', label: 'Members', href: '/members', icon: 'Users', group: 'admin' },
   { key: 'drive', label: 'Google Drive', href: '/settings/drive', icon: 'HardDrive', group: 'admin' },
   { key: 'settings', label: 'Settings', href: '/settings', icon: 'Settings', group: 'admin' },
+  { key: 'activity', label: 'Activity Log', href: '/activity', icon: 'History', group: 'admin' },
 ];
 
 export function navForRole(role: Role): NavItem[] {

@@ -23,7 +23,23 @@ export async function GET(req: Request, { params }: { params: Promise<{ kind: st
     let fileName = 'file';
     let eventId: string | null = null;
 
-    if (kind === 'photo') {
+    if (kind === 'avatar') {
+      const target = await prisma.user.findUnique({ where: { id }, select: { avatarPath: true, name: true } });
+      if (!target?.avatarPath) notFound('No profile photo set.');
+      storagePath = target.avatarPath;
+      mimeType = 'image/webp';
+      fileName = `${target.name}.webp`;
+
+      const buffer = await readStored(storagePath);
+      return new Response(new Uint8Array(buffer), {
+        headers: {
+          'Content-Type': mimeType,
+          'Content-Length': String(buffer.byteLength),
+          'Content-Disposition': `inline; filename="${encodeURIComponent(fileName)}"`,
+          'Cache-Control': 'private, max-age=3600',
+        },
+      });
+    } else if (kind === 'photo') {
       const photo = await prisma.eventPhoto.findUnique({ where: { id } });
       if (!photo) notFound('Photo not found.');
       storagePath = variant === 'thumb' && photo.thumbnailPath ? photo.thumbnailPath : photo.storagePath;
@@ -52,7 +68,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ kind: st
       const event = await prisma.event.findUnique({ where: { id: eventId } });
       if (!event) notFound('Event not found.');
       if (!canViewEvent(user, event)) forbidden('You do not have access to this file.');
-    } else if (!['SUPER_ADMIN', 'PRESIDENT', 'SECRETARY'].includes(user.role)) {
+    } else if (!['SUPER_ADMIN', 'PRESIDENT', 'SECRETARY_ADMIN'].includes(user.role)) {
       forbidden('Club-level reports are available to the review team.');
     }
 

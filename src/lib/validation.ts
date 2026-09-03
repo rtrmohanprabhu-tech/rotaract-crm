@@ -182,9 +182,13 @@ export const memberSchema = z.object({
   name: z.string().trim().min(2, 'Name is required').max(120),
   email: z.string().email('Enter a valid email'),
   phone: z.string().trim().max(24).optional().or(z.literal('')),
-  role: z.enum(['SUPER_ADMIN', 'PRESIDENT', 'SECRETARY', 'DIRECTOR', 'BOARD_MEMBER', 'VIEWER']),
-  boardPositionId: z.string().optional().or(z.literal('')),
+  role: z.enum([
+    'SUPER_ADMIN', 'PRESIDENT', 'SECRETARY_ADMIN', 'SECRETARY_COMMUNICATION',
+    'DIRECTOR', 'BOARD_MEMBER', 'REVIEWER', 'VIEWER',
+  ]),
+  boardPositionId: z.string().min(1, 'Designation is required'),
   avenueId: z.string().optional().or(z.literal('')),
+  rotaractId: z.string().trim().max(40).optional().or(z.literal('')),
   isActive: z.boolean().default(true),
   password: z.string().min(8, 'At least 8 characters').max(72).optional().or(z.literal('')),
 });
