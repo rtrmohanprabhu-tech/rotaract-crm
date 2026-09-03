@@ -16,7 +16,8 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
-    "smoke": "tsx scripts/smoke.ts"
+    "smoke": "tsx scripts/smoke.ts",
+    "bootstrap:admin": "tsx scripts/bootstrap-super-admin.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
