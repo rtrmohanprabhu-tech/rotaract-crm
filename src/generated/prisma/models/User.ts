@@ -286,6 +286,7 @@ export type UserWhereInput = {
   participations?: Prisma.EventParticipantListRelationFilter
   generatedReports?: Prisma.GeneratedReportListRelationFilter
   driveCredential?: Prisma.XOR<Prisma.DriveCredentialNullableScalarRelationFilter, Prisma.DriveCredentialWhereInput> | null
+  rosterMember?: Prisma.XOR<Prisma.RosterMemberNullableScalarRelationFilter, Prisma.RosterMemberWhereInput> | null
 }
 
 export type UserOrderByWithRelationInput = {
@@ -321,6 +322,7 @@ export type UserOrderByWithRelationInput = {
   participations?: Prisma.EventParticipantOrderByRelationAggregateInput
   generatedReports?: Prisma.GeneratedReportOrderByRelationAggregateInput
   driveCredential?: Prisma.DriveCredentialOrderByWithRelationInput
+  rosterMember?: Prisma.RosterMemberOrderByWithRelationInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -359,6 +361,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   participations?: Prisma.EventParticipantListRelationFilter
   generatedReports?: Prisma.GeneratedReportListRelationFilter
   driveCredential?: Prisma.XOR<Prisma.DriveCredentialNullableScalarRelationFilter, Prisma.DriveCredentialWhereInput> | null
+  rosterMember?: Prisma.XOR<Prisma.RosterMemberNullableScalarRelationFilter, Prisma.RosterMemberWhereInput> | null
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -436,6 +439,7 @@ export type UserCreateInput = {
   participations?: Prisma.EventParticipantCreateNestedManyWithoutUserInput
   generatedReports?: Prisma.GeneratedReportCreateNestedManyWithoutGeneratedByInput
   driveCredential?: Prisma.DriveCredentialCreateNestedOneWithoutUserInput
+  rosterMember?: Prisma.RosterMemberCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -469,6 +473,7 @@ export type UserUncheckedCreateInput = {
   participations?: Prisma.EventParticipantUncheckedCreateNestedManyWithoutUserInput
   generatedReports?: Prisma.GeneratedReportUncheckedCreateNestedManyWithoutGeneratedByInput
   driveCredential?: Prisma.DriveCredentialUncheckedCreateNestedOneWithoutUserInput
+  rosterMember?: Prisma.RosterMemberUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -502,6 +507,7 @@ export type UserUpdateInput = {
   participations?: Prisma.EventParticipantUpdateManyWithoutUserNestedInput
   generatedReports?: Prisma.GeneratedReportUpdateManyWithoutGeneratedByNestedInput
   driveCredential?: Prisma.DriveCredentialUpdateOneWithoutUserNestedInput
+  rosterMember?: Prisma.RosterMemberUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -535,6 +541,7 @@ export type UserUncheckedUpdateInput = {
   participations?: Prisma.EventParticipantUncheckedUpdateManyWithoutUserNestedInput
   generatedReports?: Prisma.GeneratedReportUncheckedUpdateManyWithoutGeneratedByNestedInput
   driveCredential?: Prisma.DriveCredentialUncheckedUpdateOneWithoutUserNestedInput
+  rosterMember?: Prisma.RosterMemberUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -649,6 +656,11 @@ export type UserMinOrderByAggregateInput = {
   deletedAt?: Prisma.SortOrder
 }
 
+export type UserNullableScalarRelationFilter = {
+  is?: Prisma.UserWhereInput | null
+  isNot?: Prisma.UserWhereInput | null
+}
+
 export type UserScalarRelationFilter = {
   is?: Prisma.UserWhereInput
   isNot?: Prisma.UserWhereInput
@@ -662,11 +674,6 @@ export type UserListRelationFilter = {
 
 export type UserOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
-}
-
-export type UserNullableScalarRelationFilter = {
-  is?: Prisma.UserWhereInput | null
-  isNot?: Prisma.UserWhereInput | null
 }
 
 export type StringFieldUpdateOperationsInput = {
@@ -691,6 +698,22 @@ export type BoolFieldUpdateOperationsInput = {
 
 export type DateTimeFieldUpdateOperationsInput = {
   set?: Date | string
+}
+
+export type UserCreateNestedOneWithoutRosterMemberInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutRosterMemberInput, Prisma.UserUncheckedCreateWithoutRosterMemberInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutRosterMemberInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneWithoutRosterMemberNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutRosterMemberInput, Prisma.UserUncheckedCreateWithoutRosterMemberInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutRosterMemberInput
+  upsert?: Prisma.UserUpsertWithoutRosterMemberInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutRosterMemberInput, Prisma.UserUpdateWithoutRosterMemberInput>, Prisma.UserUncheckedUpdateWithoutRosterMemberInput>
 }
 
 export type UserCreateNestedOneWithoutAccountsInput = {
@@ -987,6 +1010,154 @@ export type UserUpdateOneWithoutGeneratedReportsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutGeneratedReportsInput, Prisma.UserUpdateWithoutGeneratedReportsInput>, Prisma.UserUncheckedUpdateWithoutGeneratedReportsInput>
 }
 
+export type UserCreateWithoutRosterMemberInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: Date | string | null
+  image?: string | null
+  avatarPath?: string | null
+  phone?: string | null
+  rotaractId?: string | null
+  passwordHash?: string | null
+  role?: $Enums.Role
+  isActive?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  deletedAt?: Date | string | null
+  boardPosition?: Prisma.BoardPositionCreateNestedOneWithoutUsersInput
+  avenue?: Prisma.AvenueCreateNestedOneWithoutDirectorsInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  createdEvents?: Prisma.EventCreateNestedManyWithoutCreatedByInput
+  chairedEvents?: Prisma.EventCreateNestedManyWithoutChairInput
+  secretaryEvents?: Prisma.EventCreateNestedManyWithoutSecretaryInput
+  directorEvents?: Prisma.EventCreateNestedManyWithoutDirectorInput
+  reviews?: Prisma.EventReviewCreateNestedManyWithoutReviewerInput
+  comments?: Prisma.EventCommentCreateNestedManyWithoutAuthorInput
+  statusChanges?: Prisma.EventStatusHistoryCreateNestedManyWithoutActorInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  participations?: Prisma.EventParticipantCreateNestedManyWithoutUserInput
+  generatedReports?: Prisma.GeneratedReportCreateNestedManyWithoutGeneratedByInput
+  driveCredential?: Prisma.DriveCredentialCreateNestedOneWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutRosterMemberInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: Date | string | null
+  image?: string | null
+  avatarPath?: string | null
+  phone?: string | null
+  rotaractId?: string | null
+  passwordHash?: string | null
+  role?: $Enums.Role
+  isActive?: boolean
+  boardPositionId?: string | null
+  avenueId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  deletedAt?: Date | string | null
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  createdEvents?: Prisma.EventUncheckedCreateNestedManyWithoutCreatedByInput
+  chairedEvents?: Prisma.EventUncheckedCreateNestedManyWithoutChairInput
+  secretaryEvents?: Prisma.EventUncheckedCreateNestedManyWithoutSecretaryInput
+  directorEvents?: Prisma.EventUncheckedCreateNestedManyWithoutDirectorInput
+  reviews?: Prisma.EventReviewUncheckedCreateNestedManyWithoutReviewerInput
+  comments?: Prisma.EventCommentUncheckedCreateNestedManyWithoutAuthorInput
+  statusChanges?: Prisma.EventStatusHistoryUncheckedCreateNestedManyWithoutActorInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  participations?: Prisma.EventParticipantUncheckedCreateNestedManyWithoutUserInput
+  generatedReports?: Prisma.GeneratedReportUncheckedCreateNestedManyWithoutGeneratedByInput
+  driveCredential?: Prisma.DriveCredentialUncheckedCreateNestedOneWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutRosterMemberInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutRosterMemberInput, Prisma.UserUncheckedCreateWithoutRosterMemberInput>
+}
+
+export type UserUpsertWithoutRosterMemberInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutRosterMemberInput, Prisma.UserUncheckedUpdateWithoutRosterMemberInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutRosterMemberInput, Prisma.UserUncheckedCreateWithoutRosterMemberInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutRosterMemberInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutRosterMemberInput, Prisma.UserUncheckedUpdateWithoutRosterMemberInput>
+}
+
+export type UserUpdateWithoutRosterMemberInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarPath?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rotaractId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  boardPosition?: Prisma.BoardPositionUpdateOneWithoutUsersNestedInput
+  avenue?: Prisma.AvenueUpdateOneWithoutDirectorsNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  createdEvents?: Prisma.EventUpdateManyWithoutCreatedByNestedInput
+  chairedEvents?: Prisma.EventUpdateManyWithoutChairNestedInput
+  secretaryEvents?: Prisma.EventUpdateManyWithoutSecretaryNestedInput
+  directorEvents?: Prisma.EventUpdateManyWithoutDirectorNestedInput
+  reviews?: Prisma.EventReviewUpdateManyWithoutReviewerNestedInput
+  comments?: Prisma.EventCommentUpdateManyWithoutAuthorNestedInput
+  statusChanges?: Prisma.EventStatusHistoryUpdateManyWithoutActorNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  participations?: Prisma.EventParticipantUpdateManyWithoutUserNestedInput
+  generatedReports?: Prisma.GeneratedReportUpdateManyWithoutGeneratedByNestedInput
+  driveCredential?: Prisma.DriveCredentialUpdateOneWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutRosterMemberInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarPath?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rotaractId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  boardPositionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avenueId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  createdEvents?: Prisma.EventUncheckedUpdateManyWithoutCreatedByNestedInput
+  chairedEvents?: Prisma.EventUncheckedUpdateManyWithoutChairNestedInput
+  secretaryEvents?: Prisma.EventUncheckedUpdateManyWithoutSecretaryNestedInput
+  directorEvents?: Prisma.EventUncheckedUpdateManyWithoutDirectorNestedInput
+  reviews?: Prisma.EventReviewUncheckedUpdateManyWithoutReviewerNestedInput
+  comments?: Prisma.EventCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  statusChanges?: Prisma.EventStatusHistoryUncheckedUpdateManyWithoutActorNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  participations?: Prisma.EventParticipantUncheckedUpdateManyWithoutUserNestedInput
+  generatedReports?: Prisma.GeneratedReportUncheckedUpdateManyWithoutGeneratedByNestedInput
+  driveCredential?: Prisma.DriveCredentialUncheckedUpdateOneWithoutUserNestedInput
+}
+
 export type UserCreateWithoutAccountsInput = {
   id?: string
   name: string
@@ -1017,6 +1188,7 @@ export type UserCreateWithoutAccountsInput = {
   participations?: Prisma.EventParticipantCreateNestedManyWithoutUserInput
   generatedReports?: Prisma.GeneratedReportCreateNestedManyWithoutGeneratedByInput
   driveCredential?: Prisma.DriveCredentialCreateNestedOneWithoutUserInput
+  rosterMember?: Prisma.RosterMemberCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAccountsInput = {
@@ -1049,6 +1221,7 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   participations?: Prisma.EventParticipantUncheckedCreateNestedManyWithoutUserInput
   generatedReports?: Prisma.GeneratedReportUncheckedCreateNestedManyWithoutGeneratedByInput
   driveCredential?: Prisma.DriveCredentialUncheckedCreateNestedOneWithoutUserInput
+  rosterMember?: Prisma.RosterMemberUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAccountsInput = {
@@ -1097,6 +1270,7 @@ export type UserUpdateWithoutAccountsInput = {
   participations?: Prisma.EventParticipantUpdateManyWithoutUserNestedInput
   generatedReports?: Prisma.GeneratedReportUpdateManyWithoutGeneratedByNestedInput
   driveCredential?: Prisma.DriveCredentialUpdateOneWithoutUserNestedInput
+  rosterMember?: Prisma.RosterMemberUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAccountsInput = {
@@ -1129,6 +1303,7 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   participations?: Prisma.EventParticipantUncheckedUpdateManyWithoutUserNestedInput
   generatedReports?: Prisma.GeneratedReportUncheckedUpdateManyWithoutGeneratedByNestedInput
   driveCredential?: Prisma.DriveCredentialUncheckedUpdateOneWithoutUserNestedInput
+  rosterMember?: Prisma.RosterMemberUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutSessionsInput = {
@@ -1161,6 +1336,7 @@ export type UserCreateWithoutSessionsInput = {
   participations?: Prisma.EventParticipantCreateNestedManyWithoutUserInput
   generatedReports?: Prisma.GeneratedReportCreateNestedManyWithoutGeneratedByInput
   driveCredential?: Prisma.DriveCredentialCreateNestedOneWithoutUserInput
+  rosterMember?: Prisma.RosterMemberCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSessionsInput = {
@@ -1193,6 +1369,7 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   participations?: Prisma.EventParticipantUncheckedCreateNestedManyWithoutUserInput
   generatedReports?: Prisma.GeneratedReportUncheckedCreateNestedManyWithoutGeneratedByInput
   driveCredential?: Prisma.DriveCredentialUncheckedCreateNestedOneWithoutUserInput
+  rosterMember?: Prisma.RosterMemberUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSessionsInput = {
@@ -1241,6 +1418,7 @@ export type UserUpdateWithoutSessionsInput = {
   participations?: Prisma.EventParticipantUpdateManyWithoutUserNestedInput
   generatedReports?: Prisma.GeneratedReportUpdateManyWithoutGeneratedByNestedInput
   driveCredential?: Prisma.DriveCredentialUpdateOneWithoutUserNestedInput
+  rosterMember?: Prisma.RosterMemberUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -1273,6 +1451,7 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   participations?: Prisma.EventParticipantUncheckedUpdateManyWithoutUserNestedInput
   generatedReports?: Prisma.GeneratedReportUncheckedUpdateManyWithoutGeneratedByNestedInput
   driveCredential?: Prisma.DriveCredentialUncheckedUpdateOneWithoutUserNestedInput
+  rosterMember?: Prisma.RosterMemberUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutAvenueInput = {
@@ -1305,6 +1484,7 @@ export type UserCreateWithoutAvenueInput = {
   participations?: Prisma.EventParticipantCreateNestedManyWithoutUserInput
   generatedReports?: Prisma.GeneratedReportCreateNestedManyWithoutGeneratedByInput
   driveCredential?: Prisma.DriveCredentialCreateNestedOneWithoutUserInput
+  rosterMember?: Prisma.RosterMemberCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAvenueInput = {
@@ -1337,6 +1517,7 @@ export type UserUncheckedCreateWithoutAvenueInput = {
   participations?: Prisma.EventParticipantUncheckedCreateNestedManyWithoutUserInput
   generatedReports?: Prisma.GeneratedReportUncheckedCreateNestedManyWithoutGeneratedByInput
   driveCredential?: Prisma.DriveCredentialUncheckedCreateNestedOneWithoutUserInput
+  rosterMember?: Prisma.RosterMemberUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAvenueInput = {
@@ -1417,6 +1598,7 @@ export type UserCreateWithoutBoardPositionInput = {
   participations?: Prisma.EventParticipantCreateNestedManyWithoutUserInput
   generatedReports?: Prisma.GeneratedReportCreateNestedManyWithoutGeneratedByInput
   driveCredential?: Prisma.DriveCredentialCreateNestedOneWithoutUserInput
+  rosterMember?: Prisma.RosterMemberCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutBoardPositionInput = {
@@ -1449,6 +1631,7 @@ export type UserUncheckedCreateWithoutBoardPositionInput = {
   participations?: Prisma.EventParticipantUncheckedCreateNestedManyWithoutUserInput
   generatedReports?: Prisma.GeneratedReportUncheckedCreateNestedManyWithoutGeneratedByInput
   driveCredential?: Prisma.DriveCredentialUncheckedCreateNestedOneWithoutUserInput
+  rosterMember?: Prisma.RosterMemberUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutBoardPositionInput = {
@@ -1507,6 +1690,7 @@ export type UserCreateWithoutChairedEventsInput = {
   participations?: Prisma.EventParticipantCreateNestedManyWithoutUserInput
   generatedReports?: Prisma.GeneratedReportCreateNestedManyWithoutGeneratedByInput
   driveCredential?: Prisma.DriveCredentialCreateNestedOneWithoutUserInput
+  rosterMember?: Prisma.RosterMemberCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutChairedEventsInput = {
@@ -1539,6 +1723,7 @@ export type UserUncheckedCreateWithoutChairedEventsInput = {
   participations?: Prisma.EventParticipantUncheckedCreateNestedManyWithoutUserInput
   generatedReports?: Prisma.GeneratedReportUncheckedCreateNestedManyWithoutGeneratedByInput
   driveCredential?: Prisma.DriveCredentialUncheckedCreateNestedOneWithoutUserInput
+  rosterMember?: Prisma.RosterMemberUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutChairedEventsInput = {
@@ -1576,6 +1761,7 @@ export type UserCreateWithoutSecretaryEventsInput = {
   participations?: Prisma.EventParticipantCreateNestedManyWithoutUserInput
   generatedReports?: Prisma.GeneratedReportCreateNestedManyWithoutGeneratedByInput
   driveCredential?: Prisma.DriveCredentialCreateNestedOneWithoutUserInput
+  rosterMember?: Prisma.RosterMemberCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSecretaryEventsInput = {
@@ -1608,6 +1794,7 @@ export type UserUncheckedCreateWithoutSecretaryEventsInput = {
   participations?: Prisma.EventParticipantUncheckedCreateNestedManyWithoutUserInput
   generatedReports?: Prisma.GeneratedReportUncheckedCreateNestedManyWithoutGeneratedByInput
   driveCredential?: Prisma.DriveCredentialUncheckedCreateNestedOneWithoutUserInput
+  rosterMember?: Prisma.RosterMemberUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSecretaryEventsInput = {
@@ -1645,6 +1832,7 @@ export type UserCreateWithoutDirectorEventsInput = {
   participations?: Prisma.EventParticipantCreateNestedManyWithoutUserInput
   generatedReports?: Prisma.GeneratedReportCreateNestedManyWithoutGeneratedByInput
   driveCredential?: Prisma.DriveCredentialCreateNestedOneWithoutUserInput
+  rosterMember?: Prisma.RosterMemberCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutDirectorEventsInput = {
@@ -1677,6 +1865,7 @@ export type UserUncheckedCreateWithoutDirectorEventsInput = {
   participations?: Prisma.EventParticipantUncheckedCreateNestedManyWithoutUserInput
   generatedReports?: Prisma.GeneratedReportUncheckedCreateNestedManyWithoutGeneratedByInput
   driveCredential?: Prisma.DriveCredentialUncheckedCreateNestedOneWithoutUserInput
+  rosterMember?: Prisma.RosterMemberUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutDirectorEventsInput = {
@@ -1714,6 +1903,7 @@ export type UserCreateWithoutCreatedEventsInput = {
   participations?: Prisma.EventParticipantCreateNestedManyWithoutUserInput
   generatedReports?: Prisma.GeneratedReportCreateNestedManyWithoutGeneratedByInput
   driveCredential?: Prisma.DriveCredentialCreateNestedOneWithoutUserInput
+  rosterMember?: Prisma.RosterMemberCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutCreatedEventsInput = {
@@ -1746,6 +1936,7 @@ export type UserUncheckedCreateWithoutCreatedEventsInput = {
   participations?: Prisma.EventParticipantUncheckedCreateNestedManyWithoutUserInput
   generatedReports?: Prisma.GeneratedReportUncheckedCreateNestedManyWithoutGeneratedByInput
   driveCredential?: Prisma.DriveCredentialUncheckedCreateNestedOneWithoutUserInput
+  rosterMember?: Prisma.RosterMemberUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutCreatedEventsInput = {
@@ -1794,6 +1985,7 @@ export type UserUpdateWithoutChairedEventsInput = {
   participations?: Prisma.EventParticipantUpdateManyWithoutUserNestedInput
   generatedReports?: Prisma.GeneratedReportUpdateManyWithoutGeneratedByNestedInput
   driveCredential?: Prisma.DriveCredentialUpdateOneWithoutUserNestedInput
+  rosterMember?: Prisma.RosterMemberUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutChairedEventsInput = {
@@ -1826,6 +2018,7 @@ export type UserUncheckedUpdateWithoutChairedEventsInput = {
   participations?: Prisma.EventParticipantUncheckedUpdateManyWithoutUserNestedInput
   generatedReports?: Prisma.GeneratedReportUncheckedUpdateManyWithoutGeneratedByNestedInput
   driveCredential?: Prisma.DriveCredentialUncheckedUpdateOneWithoutUserNestedInput
+  rosterMember?: Prisma.RosterMemberUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutSecretaryEventsInput = {
@@ -1869,6 +2062,7 @@ export type UserUpdateWithoutSecretaryEventsInput = {
   participations?: Prisma.EventParticipantUpdateManyWithoutUserNestedInput
   generatedReports?: Prisma.GeneratedReportUpdateManyWithoutGeneratedByNestedInput
   driveCredential?: Prisma.DriveCredentialUpdateOneWithoutUserNestedInput
+  rosterMember?: Prisma.RosterMemberUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSecretaryEventsInput = {
@@ -1901,6 +2095,7 @@ export type UserUncheckedUpdateWithoutSecretaryEventsInput = {
   participations?: Prisma.EventParticipantUncheckedUpdateManyWithoutUserNestedInput
   generatedReports?: Prisma.GeneratedReportUncheckedUpdateManyWithoutGeneratedByNestedInput
   driveCredential?: Prisma.DriveCredentialUncheckedUpdateOneWithoutUserNestedInput
+  rosterMember?: Prisma.RosterMemberUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutDirectorEventsInput = {
@@ -1944,6 +2139,7 @@ export type UserUpdateWithoutDirectorEventsInput = {
   participations?: Prisma.EventParticipantUpdateManyWithoutUserNestedInput
   generatedReports?: Prisma.GeneratedReportUpdateManyWithoutGeneratedByNestedInput
   driveCredential?: Prisma.DriveCredentialUpdateOneWithoutUserNestedInput
+  rosterMember?: Prisma.RosterMemberUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDirectorEventsInput = {
@@ -1976,6 +2172,7 @@ export type UserUncheckedUpdateWithoutDirectorEventsInput = {
   participations?: Prisma.EventParticipantUncheckedUpdateManyWithoutUserNestedInput
   generatedReports?: Prisma.GeneratedReportUncheckedUpdateManyWithoutGeneratedByNestedInput
   driveCredential?: Prisma.DriveCredentialUncheckedUpdateOneWithoutUserNestedInput
+  rosterMember?: Prisma.RosterMemberUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutCreatedEventsInput = {
@@ -2019,6 +2216,7 @@ export type UserUpdateWithoutCreatedEventsInput = {
   participations?: Prisma.EventParticipantUpdateManyWithoutUserNestedInput
   generatedReports?: Prisma.GeneratedReportUpdateManyWithoutGeneratedByNestedInput
   driveCredential?: Prisma.DriveCredentialUpdateOneWithoutUserNestedInput
+  rosterMember?: Prisma.RosterMemberUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCreatedEventsInput = {
@@ -2051,6 +2249,7 @@ export type UserUncheckedUpdateWithoutCreatedEventsInput = {
   participations?: Prisma.EventParticipantUncheckedUpdateManyWithoutUserNestedInput
   generatedReports?: Prisma.GeneratedReportUncheckedUpdateManyWithoutGeneratedByNestedInput
   driveCredential?: Prisma.DriveCredentialUncheckedUpdateOneWithoutUserNestedInput
+  rosterMember?: Prisma.RosterMemberUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutParticipationsInput = {
@@ -2083,6 +2282,7 @@ export type UserCreateWithoutParticipationsInput = {
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
   generatedReports?: Prisma.GeneratedReportCreateNestedManyWithoutGeneratedByInput
   driveCredential?: Prisma.DriveCredentialCreateNestedOneWithoutUserInput
+  rosterMember?: Prisma.RosterMemberCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutParticipationsInput = {
@@ -2115,6 +2315,7 @@ export type UserUncheckedCreateWithoutParticipationsInput = {
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
   generatedReports?: Prisma.GeneratedReportUncheckedCreateNestedManyWithoutGeneratedByInput
   driveCredential?: Prisma.DriveCredentialUncheckedCreateNestedOneWithoutUserInput
+  rosterMember?: Prisma.RosterMemberUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutParticipationsInput = {
@@ -2163,6 +2364,7 @@ export type UserUpdateWithoutParticipationsInput = {
   auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
   generatedReports?: Prisma.GeneratedReportUpdateManyWithoutGeneratedByNestedInput
   driveCredential?: Prisma.DriveCredentialUpdateOneWithoutUserNestedInput
+  rosterMember?: Prisma.RosterMemberUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutParticipationsInput = {
@@ -2195,6 +2397,7 @@ export type UserUncheckedUpdateWithoutParticipationsInput = {
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
   generatedReports?: Prisma.GeneratedReportUncheckedUpdateManyWithoutGeneratedByNestedInput
   driveCredential?: Prisma.DriveCredentialUncheckedUpdateOneWithoutUserNestedInput
+  rosterMember?: Prisma.RosterMemberUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutReviewsInput = {
@@ -2227,6 +2430,7 @@ export type UserCreateWithoutReviewsInput = {
   participations?: Prisma.EventParticipantCreateNestedManyWithoutUserInput
   generatedReports?: Prisma.GeneratedReportCreateNestedManyWithoutGeneratedByInput
   driveCredential?: Prisma.DriveCredentialCreateNestedOneWithoutUserInput
+  rosterMember?: Prisma.RosterMemberCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutReviewsInput = {
@@ -2259,6 +2463,7 @@ export type UserUncheckedCreateWithoutReviewsInput = {
   participations?: Prisma.EventParticipantUncheckedCreateNestedManyWithoutUserInput
   generatedReports?: Prisma.GeneratedReportUncheckedCreateNestedManyWithoutGeneratedByInput
   driveCredential?: Prisma.DriveCredentialUncheckedCreateNestedOneWithoutUserInput
+  rosterMember?: Prisma.RosterMemberUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutReviewsInput = {
@@ -2307,6 +2512,7 @@ export type UserUpdateWithoutReviewsInput = {
   participations?: Prisma.EventParticipantUpdateManyWithoutUserNestedInput
   generatedReports?: Prisma.GeneratedReportUpdateManyWithoutGeneratedByNestedInput
   driveCredential?: Prisma.DriveCredentialUpdateOneWithoutUserNestedInput
+  rosterMember?: Prisma.RosterMemberUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutReviewsInput = {
@@ -2339,6 +2545,7 @@ export type UserUncheckedUpdateWithoutReviewsInput = {
   participations?: Prisma.EventParticipantUncheckedUpdateManyWithoutUserNestedInput
   generatedReports?: Prisma.GeneratedReportUncheckedUpdateManyWithoutGeneratedByNestedInput
   driveCredential?: Prisma.DriveCredentialUncheckedUpdateOneWithoutUserNestedInput
+  rosterMember?: Prisma.RosterMemberUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutCommentsInput = {
@@ -2371,6 +2578,7 @@ export type UserCreateWithoutCommentsInput = {
   participations?: Prisma.EventParticipantCreateNestedManyWithoutUserInput
   generatedReports?: Prisma.GeneratedReportCreateNestedManyWithoutGeneratedByInput
   driveCredential?: Prisma.DriveCredentialCreateNestedOneWithoutUserInput
+  rosterMember?: Prisma.RosterMemberCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutCommentsInput = {
@@ -2403,6 +2611,7 @@ export type UserUncheckedCreateWithoutCommentsInput = {
   participations?: Prisma.EventParticipantUncheckedCreateNestedManyWithoutUserInput
   generatedReports?: Prisma.GeneratedReportUncheckedCreateNestedManyWithoutGeneratedByInput
   driveCredential?: Prisma.DriveCredentialUncheckedCreateNestedOneWithoutUserInput
+  rosterMember?: Prisma.RosterMemberUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutCommentsInput = {
@@ -2451,6 +2660,7 @@ export type UserUpdateWithoutCommentsInput = {
   participations?: Prisma.EventParticipantUpdateManyWithoutUserNestedInput
   generatedReports?: Prisma.GeneratedReportUpdateManyWithoutGeneratedByNestedInput
   driveCredential?: Prisma.DriveCredentialUpdateOneWithoutUserNestedInput
+  rosterMember?: Prisma.RosterMemberUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCommentsInput = {
@@ -2483,6 +2693,7 @@ export type UserUncheckedUpdateWithoutCommentsInput = {
   participations?: Prisma.EventParticipantUncheckedUpdateManyWithoutUserNestedInput
   generatedReports?: Prisma.GeneratedReportUncheckedUpdateManyWithoutGeneratedByNestedInput
   driveCredential?: Prisma.DriveCredentialUncheckedUpdateOneWithoutUserNestedInput
+  rosterMember?: Prisma.RosterMemberUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutStatusChangesInput = {
@@ -2515,6 +2726,7 @@ export type UserCreateWithoutStatusChangesInput = {
   participations?: Prisma.EventParticipantCreateNestedManyWithoutUserInput
   generatedReports?: Prisma.GeneratedReportCreateNestedManyWithoutGeneratedByInput
   driveCredential?: Prisma.DriveCredentialCreateNestedOneWithoutUserInput
+  rosterMember?: Prisma.RosterMemberCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutStatusChangesInput = {
@@ -2547,6 +2759,7 @@ export type UserUncheckedCreateWithoutStatusChangesInput = {
   participations?: Prisma.EventParticipantUncheckedCreateNestedManyWithoutUserInput
   generatedReports?: Prisma.GeneratedReportUncheckedCreateNestedManyWithoutGeneratedByInput
   driveCredential?: Prisma.DriveCredentialUncheckedCreateNestedOneWithoutUserInput
+  rosterMember?: Prisma.RosterMemberUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutStatusChangesInput = {
@@ -2595,6 +2808,7 @@ export type UserUpdateWithoutStatusChangesInput = {
   participations?: Prisma.EventParticipantUpdateManyWithoutUserNestedInput
   generatedReports?: Prisma.GeneratedReportUpdateManyWithoutGeneratedByNestedInput
   driveCredential?: Prisma.DriveCredentialUpdateOneWithoutUserNestedInput
+  rosterMember?: Prisma.RosterMemberUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutStatusChangesInput = {
@@ -2627,6 +2841,7 @@ export type UserUncheckedUpdateWithoutStatusChangesInput = {
   participations?: Prisma.EventParticipantUncheckedUpdateManyWithoutUserNestedInput
   generatedReports?: Prisma.GeneratedReportUncheckedUpdateManyWithoutGeneratedByNestedInput
   driveCredential?: Prisma.DriveCredentialUncheckedUpdateOneWithoutUserNestedInput
+  rosterMember?: Prisma.RosterMemberUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutAuditLogsInput = {
@@ -2659,6 +2874,7 @@ export type UserCreateWithoutAuditLogsInput = {
   participations?: Prisma.EventParticipantCreateNestedManyWithoutUserInput
   generatedReports?: Prisma.GeneratedReportCreateNestedManyWithoutGeneratedByInput
   driveCredential?: Prisma.DriveCredentialCreateNestedOneWithoutUserInput
+  rosterMember?: Prisma.RosterMemberCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAuditLogsInput = {
@@ -2691,6 +2907,7 @@ export type UserUncheckedCreateWithoutAuditLogsInput = {
   participations?: Prisma.EventParticipantUncheckedCreateNestedManyWithoutUserInput
   generatedReports?: Prisma.GeneratedReportUncheckedCreateNestedManyWithoutGeneratedByInput
   driveCredential?: Prisma.DriveCredentialUncheckedCreateNestedOneWithoutUserInput
+  rosterMember?: Prisma.RosterMemberUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAuditLogsInput = {
@@ -2739,6 +2956,7 @@ export type UserUpdateWithoutAuditLogsInput = {
   participations?: Prisma.EventParticipantUpdateManyWithoutUserNestedInput
   generatedReports?: Prisma.GeneratedReportUpdateManyWithoutGeneratedByNestedInput
   driveCredential?: Prisma.DriveCredentialUpdateOneWithoutUserNestedInput
+  rosterMember?: Prisma.RosterMemberUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAuditLogsInput = {
@@ -2771,6 +2989,7 @@ export type UserUncheckedUpdateWithoutAuditLogsInput = {
   participations?: Prisma.EventParticipantUncheckedUpdateManyWithoutUserNestedInput
   generatedReports?: Prisma.GeneratedReportUncheckedUpdateManyWithoutGeneratedByNestedInput
   driveCredential?: Prisma.DriveCredentialUncheckedUpdateOneWithoutUserNestedInput
+  rosterMember?: Prisma.RosterMemberUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutNotificationsInput = {
@@ -2803,6 +3022,7 @@ export type UserCreateWithoutNotificationsInput = {
   participations?: Prisma.EventParticipantCreateNestedManyWithoutUserInput
   generatedReports?: Prisma.GeneratedReportCreateNestedManyWithoutGeneratedByInput
   driveCredential?: Prisma.DriveCredentialCreateNestedOneWithoutUserInput
+  rosterMember?: Prisma.RosterMemberCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutNotificationsInput = {
@@ -2835,6 +3055,7 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   participations?: Prisma.EventParticipantUncheckedCreateNestedManyWithoutUserInput
   generatedReports?: Prisma.GeneratedReportUncheckedCreateNestedManyWithoutGeneratedByInput
   driveCredential?: Prisma.DriveCredentialUncheckedCreateNestedOneWithoutUserInput
+  rosterMember?: Prisma.RosterMemberUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutNotificationsInput = {
@@ -2883,6 +3104,7 @@ export type UserUpdateWithoutNotificationsInput = {
   participations?: Prisma.EventParticipantUpdateManyWithoutUserNestedInput
   generatedReports?: Prisma.GeneratedReportUpdateManyWithoutGeneratedByNestedInput
   driveCredential?: Prisma.DriveCredentialUpdateOneWithoutUserNestedInput
+  rosterMember?: Prisma.RosterMemberUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNotificationsInput = {
@@ -2915,6 +3137,7 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   participations?: Prisma.EventParticipantUncheckedUpdateManyWithoutUserNestedInput
   generatedReports?: Prisma.GeneratedReportUncheckedUpdateManyWithoutGeneratedByNestedInput
   driveCredential?: Prisma.DriveCredentialUncheckedUpdateOneWithoutUserNestedInput
+  rosterMember?: Prisma.RosterMemberUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutDriveCredentialInput = {
@@ -2947,6 +3170,7 @@ export type UserCreateWithoutDriveCredentialInput = {
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
   participations?: Prisma.EventParticipantCreateNestedManyWithoutUserInput
   generatedReports?: Prisma.GeneratedReportCreateNestedManyWithoutGeneratedByInput
+  rosterMember?: Prisma.RosterMemberCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutDriveCredentialInput = {
@@ -2979,6 +3203,7 @@ export type UserUncheckedCreateWithoutDriveCredentialInput = {
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
   participations?: Prisma.EventParticipantUncheckedCreateNestedManyWithoutUserInput
   generatedReports?: Prisma.GeneratedReportUncheckedCreateNestedManyWithoutGeneratedByInput
+  rosterMember?: Prisma.RosterMemberUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutDriveCredentialInput = {
@@ -3027,6 +3252,7 @@ export type UserUpdateWithoutDriveCredentialInput = {
   auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
   participations?: Prisma.EventParticipantUpdateManyWithoutUserNestedInput
   generatedReports?: Prisma.GeneratedReportUpdateManyWithoutGeneratedByNestedInput
+  rosterMember?: Prisma.RosterMemberUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDriveCredentialInput = {
@@ -3059,6 +3285,7 @@ export type UserUncheckedUpdateWithoutDriveCredentialInput = {
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
   participations?: Prisma.EventParticipantUncheckedUpdateManyWithoutUserNestedInput
   generatedReports?: Prisma.GeneratedReportUncheckedUpdateManyWithoutGeneratedByNestedInput
+  rosterMember?: Prisma.RosterMemberUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutGeneratedReportsInput = {
@@ -3091,6 +3318,7 @@ export type UserCreateWithoutGeneratedReportsInput = {
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
   participations?: Prisma.EventParticipantCreateNestedManyWithoutUserInput
   driveCredential?: Prisma.DriveCredentialCreateNestedOneWithoutUserInput
+  rosterMember?: Prisma.RosterMemberCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutGeneratedReportsInput = {
@@ -3123,6 +3351,7 @@ export type UserUncheckedCreateWithoutGeneratedReportsInput = {
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
   participations?: Prisma.EventParticipantUncheckedCreateNestedManyWithoutUserInput
   driveCredential?: Prisma.DriveCredentialUncheckedCreateNestedOneWithoutUserInput
+  rosterMember?: Prisma.RosterMemberUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutGeneratedReportsInput = {
@@ -3171,6 +3400,7 @@ export type UserUpdateWithoutGeneratedReportsInput = {
   auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
   participations?: Prisma.EventParticipantUpdateManyWithoutUserNestedInput
   driveCredential?: Prisma.DriveCredentialUpdateOneWithoutUserNestedInput
+  rosterMember?: Prisma.RosterMemberUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutGeneratedReportsInput = {
@@ -3203,6 +3433,7 @@ export type UserUncheckedUpdateWithoutGeneratedReportsInput = {
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
   participations?: Prisma.EventParticipantUncheckedUpdateManyWithoutUserNestedInput
   driveCredential?: Prisma.DriveCredentialUncheckedUpdateOneWithoutUserNestedInput
+  rosterMember?: Prisma.RosterMemberUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateManyAvenueInput = {
@@ -3253,6 +3484,7 @@ export type UserUpdateWithoutAvenueInput = {
   participations?: Prisma.EventParticipantUpdateManyWithoutUserNestedInput
   generatedReports?: Prisma.GeneratedReportUpdateManyWithoutGeneratedByNestedInput
   driveCredential?: Prisma.DriveCredentialUpdateOneWithoutUserNestedInput
+  rosterMember?: Prisma.RosterMemberUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAvenueInput = {
@@ -3285,6 +3517,7 @@ export type UserUncheckedUpdateWithoutAvenueInput = {
   participations?: Prisma.EventParticipantUncheckedUpdateManyWithoutUserNestedInput
   generatedReports?: Prisma.GeneratedReportUncheckedUpdateManyWithoutGeneratedByNestedInput
   driveCredential?: Prisma.DriveCredentialUncheckedUpdateOneWithoutUserNestedInput
+  rosterMember?: Prisma.RosterMemberUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateManyWithoutAvenueInput = {
@@ -3353,6 +3586,7 @@ export type UserUpdateWithoutBoardPositionInput = {
   participations?: Prisma.EventParticipantUpdateManyWithoutUserNestedInput
   generatedReports?: Prisma.GeneratedReportUpdateManyWithoutGeneratedByNestedInput
   driveCredential?: Prisma.DriveCredentialUpdateOneWithoutUserNestedInput
+  rosterMember?: Prisma.RosterMemberUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutBoardPositionInput = {
@@ -3385,6 +3619,7 @@ export type UserUncheckedUpdateWithoutBoardPositionInput = {
   participations?: Prisma.EventParticipantUncheckedUpdateManyWithoutUserNestedInput
   generatedReports?: Prisma.GeneratedReportUncheckedUpdateManyWithoutGeneratedByNestedInput
   driveCredential?: Prisma.DriveCredentialUncheckedUpdateOneWithoutUserNestedInput
+  rosterMember?: Prisma.RosterMemberUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateManyWithoutBoardPositionInput = {
@@ -3577,6 +3812,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   participations?: boolean | Prisma.User$participationsArgs<ExtArgs>
   generatedReports?: boolean | Prisma.User$generatedReportsArgs<ExtArgs>
   driveCredential?: boolean | Prisma.User$driveCredentialArgs<ExtArgs>
+  rosterMember?: boolean | Prisma.User$rosterMemberArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -3659,6 +3895,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   participations?: boolean | Prisma.User$participationsArgs<ExtArgs>
   generatedReports?: boolean | Prisma.User$generatedReportsArgs<ExtArgs>
   driveCredential?: boolean | Prisma.User$driveCredentialArgs<ExtArgs>
+  rosterMember?: boolean | Prisma.User$rosterMemberArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -3689,6 +3926,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     participations: Prisma.$EventParticipantPayload<ExtArgs>[]
     generatedReports: Prisma.$GeneratedReportPayload<ExtArgs>[]
     driveCredential: Prisma.$DriveCredentialPayload<ExtArgs> | null
+    rosterMember: Prisma.$RosterMemberPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -4117,6 +4355,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   participations<T extends Prisma.User$participationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$participationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$EventParticipantPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   generatedReports<T extends Prisma.User$generatedReportsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$generatedReportsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$GeneratedReportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   driveCredential<T extends Prisma.User$driveCredentialArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$driveCredentialArgs<ExtArgs>>): Prisma.Prisma__DriveCredentialClient<runtime.Types.Result.GetResult<Prisma.$DriveCredentialPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  rosterMember<T extends Prisma.User$rosterMemberArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$rosterMemberArgs<ExtArgs>>): Prisma.Prisma__RosterMemberClient<runtime.Types.Result.GetResult<Prisma.$RosterMemberPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -4924,6 +5163,25 @@ export type User$driveCredentialArgs<ExtArgs extends runtime.Types.Extensions.In
    */
   include?: Prisma.DriveCredentialInclude<ExtArgs> | null
   where?: Prisma.DriveCredentialWhereInput
+}
+
+/**
+ * User.rosterMember
+ */
+export type User$rosterMemberArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the RosterMember
+   */
+  select?: Prisma.RosterMemberSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the RosterMember
+   */
+  omit?: Prisma.RosterMemberOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.RosterMemberInclude<ExtArgs> | null
+  where?: Prisma.RosterMemberWhereInput
 }
 
 /**

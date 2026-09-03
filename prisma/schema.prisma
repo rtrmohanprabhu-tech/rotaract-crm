@@ -199,10 +199,34 @@ model User {
   participations EventParticipant[]
   generatedReports GeneratedReport[]
   driveCredential DriveCredential?
+  rosterMember    RosterMember?
 
   @@index([role])
   @@index([avenueId])
   @@map("users")
+}
+
+/// The official club roster (§ Members/Admin roster import). Independent of
+/// User: a person can be listed here — with their real name and portfolio —
+/// before they have an email or ever sign in. Once an admin creates a login
+/// for them, this row links to the resulting User via `userId`; System Role
+/// and active/inactive are then read from that User (the actual login gate),
+/// not from this row's isActive/intendedRole, which stay informational.
+model RosterMember {
+  id           String  @id @default(cuid())
+  name         String
+  portfolio    String? // exact designation text, e.g. "Web Service Chair" — free text, not an enum
+  intendedRole Role    @default(BOARD_MEMBER) // the role to apply once a login is created; ignored once linked
+  isActive     Boolean @default(true) // only meaningful while unlinked — a linked member's status is User.isActive
+
+  userId String? @unique
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@map("roster_members")
 }
 
 model Account {

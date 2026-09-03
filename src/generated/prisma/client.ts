@@ -47,6 +47,16 @@ export { Prisma }
  */
 export type User = Prisma.UserModel
 /**
+ * Model RosterMember
+ * The official club roster (§ Members/Admin roster import). Independent of
+ * User: a person can be listed here — with their real name and portfolio —
+ * before they have an email or ever sign in. Once an admin creates a login
+ * for them, this row links to the resulting User via `userId`; System Role
+ * and active/inactive are then read from that User (the actual login gate),
+ * not from this row's isActive/intendedRole, which stay informational.
+ */
+export type RosterMember = Prisma.RosterMemberModel
+/**
  * Model Account
  * 
  */

@@ -391,6 +391,7 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 export const ModelName = {
   User: 'User',
+  RosterMember: 'RosterMember',
   Account: 'Account',
   Session: 'Session',
   VerificationToken: 'VerificationToken',
@@ -432,7 +433,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "account" | "session" | "verificationToken" | "clubSettings" | "avenue" | "boardPosition" | "project" | "event" | "eventBeneficiary" | "eventParticipant" | "eventCollaborator" | "eventExpense" | "eventPhoto" | "eventDocument" | "eventSocialLink" | "eventReview" | "eventComment" | "eventStatusHistory" | "auditLog" | "notification" | "driveFolder" | "driveFolderCache" | "driveFile" | "driveCredential" | "generatedReport" | "syncJob"
+    modelProps: "user" | "rosterMember" | "account" | "session" | "verificationToken" | "clubSettings" | "avenue" | "boardPosition" | "project" | "event" | "eventBeneficiary" | "eventParticipant" | "eventCollaborator" | "eventExpense" | "eventPhoto" | "eventDocument" | "eventSocialLink" | "eventReview" | "eventComment" | "eventStatusHistory" | "auditLog" | "notification" | "driveFolder" | "driveFolderCache" | "driveFile" | "driveCredential" | "generatedReport" | "syncJob"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -507,6 +508,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.UserCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.UserCountAggregateOutputType> | number
+        }
+      }
+    }
+    RosterMember: {
+      payload: Prisma.$RosterMemberPayload<ExtArgs>
+      fields: Prisma.RosterMemberFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.RosterMemberFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RosterMemberPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.RosterMemberFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RosterMemberPayload>
+        }
+        findFirst: {
+          args: Prisma.RosterMemberFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RosterMemberPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.RosterMemberFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RosterMemberPayload>
+        }
+        findMany: {
+          args: Prisma.RosterMemberFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RosterMemberPayload>[]
+        }
+        create: {
+          args: Prisma.RosterMemberCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RosterMemberPayload>
+        }
+        createMany: {
+          args: Prisma.RosterMemberCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.RosterMemberCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RosterMemberPayload>[]
+        }
+        delete: {
+          args: Prisma.RosterMemberDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RosterMemberPayload>
+        }
+        update: {
+          args: Prisma.RosterMemberUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RosterMemberPayload>
+        }
+        deleteMany: {
+          args: Prisma.RosterMemberDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.RosterMemberUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.RosterMemberUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RosterMemberPayload>[]
+        }
+        upsert: {
+          args: Prisma.RosterMemberUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RosterMemberPayload>
+        }
+        aggregate: {
+          args: Prisma.RosterMemberAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateRosterMember>
+        }
+        groupBy: {
+          args: Prisma.RosterMemberGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.RosterMemberGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.RosterMemberCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.RosterMemberCountAggregateOutputType> | number
         }
       }
     }
@@ -2495,6 +2570,21 @@ export const UserScalarFieldEnum = {
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
 
 
+export const RosterMemberScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  portfolio: 'portfolio',
+  intendedRole: 'intendedRole',
+  isActive: 'isActive',
+  userId: 'userId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  deletedAt: 'deletedAt'
+} as const
+
+export type RosterMemberScalarFieldEnum = (typeof RosterMemberScalarFieldEnum)[keyof typeof RosterMemberScalarFieldEnum]
+
+
 export const AccountScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -3325,6 +3415,7 @@ export interface PrismaClientOptions {
 }
 export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
+  rosterMember?: Prisma.RosterMemberOmit
   account?: Prisma.AccountOmit
   session?: Prisma.SessionOmit
   verificationToken?: Prisma.VerificationTokenOmit

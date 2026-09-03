@@ -193,6 +193,25 @@ export const memberSchema = z.object({
   password: z.string().min(8, 'At least 8 characters').max(72).optional().or(z.literal('')),
 });
 
+const roleEnum = z.enum([
+  'SUPER_ADMIN', 'PRESIDENT', 'SECRETARY_ADMIN', 'SECRETARY_COMMUNICATION',
+  'DIRECTOR', 'BOARD_MEMBER', 'REVIEWER', 'VIEWER',
+]);
+
+/** A roster entry has no email/password — those only exist once a login is created. */
+export const rosterMemberSchema = z.object({
+  name: z.string().trim().min(2, 'Name is required').max(120),
+  portfolio: z.string().trim().max(120).optional().or(z.literal('')),
+  intendedRole: roleEnum,
+  isActive: z.boolean().default(true),
+});
+
+/** Creating a login for an existing roster entry — the one place a roster member needs an email. */
+export const rosterLoginSchema = z.object({
+  email: z.string().email('Enter a valid email'),
+  password: z.string().min(8, 'At least 8 characters').max(72).optional().or(z.literal('')),
+});
+
 export const projectSchema = z.object({
   name: z.string().trim().min(2).max(160),
   description: z.string().trim().max(2000).optional().or(z.literal('')),

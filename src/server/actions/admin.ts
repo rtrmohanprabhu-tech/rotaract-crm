@@ -7,7 +7,14 @@ import { prisma } from '@/lib/prisma';
 import { requireUser } from '@/server/session';
 import { can } from '@/lib/permissions';
 import { logAudit } from '@/server/audit';
-import { clubSettingsSchema, flattenZodError, memberSchema, projectSchema } from '@/lib/validation';
+import {
+  clubSettingsSchema,
+  flattenZodError,
+  memberSchema,
+  projectSchema,
+  rosterLoginSchema,
+  rosterMemberSchema,
+} from '@/lib/validation';
 import { slugify } from '@/lib/utils';
 import type { ActionResult } from './events';
 
@@ -104,6 +111,116 @@ export async function setMemberActiveAction(id: string, isActive: boolean): Prom
   });
   revalidatePath('/members');
   return { ok: true, message: isActive ? 'Member reactivated.' : 'Member deactivated.' };
+}
+
+/** Add/edit a roster entry — name, portfolio, intended role. Never touches email/password/User. */
+export async function upsertRosterMemberAction(id: string | null, raw: unknown): Promise<ActionResult<{ id: string }>> {
+  const user = await requireUser();
+  if (!can(user, 'members.manage')) return { ok: false, message: 'Only an admin can manage members.' };
+
+  const parsed = rosterMemberSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { ok: false, message: 'Please check the highlighted fields.', fieldErrors: flattenZodError(parsed.error) };
+  }
+  const { portfolio, ...data } = parsed.data;
+  const payload = { ...data, portfolio: portfolio || null };
+
+  const record = id
+    ? await prisma.rosterMember.update({ where: { id }, data: payload })
+    : await prisma.rosterMember.create({ data: payload });
+
+  // "System role" is presented as one field regardless of link state — once a
+  // login exists, that's the role that actually governs permissions, so keep
+  // it in sync rather than leaving intendedRole to silently drift from it.
+  if (record.userId) {
+    await prisma.user.update({ where: { id: record.userId }, data: { role: data.intendedRole } });
+  }
+
+  await logAudit({
+    actorId: user.id,
+    actorLabel: user.name,
+    action: id ? 'roster.update' : 'roster.create',
+    entityType: 'rosterMember',
+    entityId: record.id,
+    summary: `${user.name} ${id ? 'updated' : 'added'} roster entry ${record.name}`,
+  });
+  revalidatePath('/members');
+  return { ok: true, data: { id: record.id }, message: id ? 'Member updated.' : 'Member added.' };
+}
+
+/**
+ * Status for a roster entry: if it's linked to a User, that User's isActive
+ * is the real login gate, so we flip that (and mirror it onto the roster row
+ * for display consistency). If unlinked, there's no login to gate — only the
+ * roster row's own isActive changes.
+ */
+export async function setRosterMemberActiveAction(id: string, isActive: boolean): Promise<ActionResult> {
+  const user = await requireUser();
+  if (!can(user, 'members.manage')) return { ok: false, message: 'Only an admin can manage members.' };
+
+  const roster = await prisma.rosterMember.findUnique({ where: { id } });
+  if (!roster) return { ok: false, message: 'That roster entry no longer exists.' };
+  if (roster.userId === user.id && !isActive) return { ok: false, message: 'You cannot deactivate your own account.' };
+
+  if (roster.userId) {
+    await prisma.user.update({ where: { id: roster.userId }, data: { isActive } });
+  }
+  const record = await prisma.rosterMember.update({ where: { id }, data: { isActive } });
+
+  await logAudit({
+    actorId: user.id,
+    actorLabel: user.name,
+    action: 'roster.status',
+    entityType: 'rosterMember',
+    entityId: id,
+    summary: `${user.name} ${isActive ? 'reactivated' : 'deactivated'} ${record.name}`,
+  });
+  revalidatePath('/members');
+  return { ok: true, message: isActive ? 'Member reactivated.' : 'Member deactivated.' };
+}
+
+/** The one place a roster member's email is ever collected — creating their first login. */
+export async function createLoginForRosterMemberAction(rosterMemberId: string, raw: unknown): Promise<ActionResult<{ userId: string }>> {
+  const user = await requireUser();
+  if (!can(user, 'members.manage')) return { ok: false, message: 'Only an admin can manage members.' };
+
+  const roster = await prisma.rosterMember.findUnique({ where: { id: rosterMemberId } });
+  if (!roster) return { ok: false, message: 'That roster entry no longer exists.' };
+  if (roster.userId) return { ok: false, message: 'This member already has a login.' };
+
+  const parsed = rosterLoginSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { ok: false, message: 'Please check the highlighted fields.', fieldErrors: flattenZodError(parsed.error) };
+  }
+  const email = parsed.data.email.toLowerCase().trim();
+
+  const clash = await prisma.user.findUnique({ where: { email } });
+  if (clash) return { ok: false, message: 'Another member already uses that email.', fieldErrors: { email: 'Already in use' } };
+
+  const created = await prisma.$transaction(async (tx) => {
+    const newUser = await tx.user.create({
+      data: {
+        name: roster.name,
+        email,
+        role: roster.intendedRole,
+        isActive: true,
+        ...(parsed.data.password ? { passwordHash: await bcrypt.hash(parsed.data.password, 12) } : {}),
+      },
+    });
+    await tx.rosterMember.update({ where: { id: rosterMemberId }, data: { userId: newUser.id, isActive: true } });
+    return newUser;
+  });
+
+  await logAudit({
+    actorId: user.id,
+    actorLabel: user.name,
+    action: 'roster.login_created',
+    entityType: 'user',
+    entityId: created.id,
+    summary: `${user.name} created a login for ${roster.name} (${created.role})`,
+  });
+  revalidatePath('/members');
+  return { ok: true, data: { userId: created.id }, message: 'Login created.' };
 }
 
 const avenueSchema = z.object({

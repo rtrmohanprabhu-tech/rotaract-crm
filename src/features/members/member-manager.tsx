@@ -2,29 +2,21 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { Camera, Pencil, Plus, Search, UserCheck, UserX, X } from 'lucide-react';
+import { Camera, KeyRound, Pencil, Plus, Search, UserCheck, UserX, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Field, Input, Select, Toggle } from '@/components/ui/field';
 import { Avatar } from '@/components/ui/misc';
 import { useToast } from '@/components/ui/toast';
 import { ROLE_LABELS } from '@/lib/constants';
-import { setMemberActiveAction, upsertMemberAction } from '@/server/actions/admin';
+import {
+  createLoginForRosterMemberAction,
+  setMemberActiveAction,
+  setRosterMemberActiveAction,
+  upsertMemberAction,
+  upsertRosterMemberAction,
+} from '@/server/actions/admin';
+import type { MemberRow } from '@/server/roster';
 import type { Role } from '@/generated/prisma/enums';
-
-export type MemberRow = {
-  id: string;
-  name: string;
-  email: string;
-  phone: string | null;
-  rotaractId: string | null;
-  role: Role;
-  isActive: boolean;
-  image: string | null;
-  avenueId: string | null;
-  boardPositionId: string | null;
-  boardPosition: { title: string } | null;
-  _count?: { createdEvents: number };
-};
 
 const STATUS_OPTIONS = [
   { value: 'ALL', label: 'All statuses' },
@@ -32,46 +24,53 @@ const STATUS_OPTIONS = [
   { value: 'INACTIVE', label: 'Inactive' },
 ] as const;
 
+type ModalState =
+  | { kind: 'roster-form'; row?: MemberRow }
+  | { kind: 'user-form'; row: MemberRow }
+  | { kind: 'create-login'; row: MemberRow }
+  | null;
+
 export function MemberManager({
-  members,
-  avenues,
+  rows,
   positions,
   currentUserId,
 }: {
-  members: MemberRow[];
-  avenues: Array<{ id: string; name: string }>;
+  rows: MemberRow[];
   positions: Array<{ id: string; title: string }>;
   currentUserId: string;
 }) {
   const router = useRouter();
   const toast = useToast();
-  const [editing, setEditing] = React.useState<MemberRow | 'new' | null>(null);
+  const [modal, setModal] = React.useState<ModalState>(null);
   const [search, setSearch] = React.useState('');
   const [statusFilter, setStatusFilter] = React.useState<(typeof STATUS_OPTIONS)[number]['value']>('ALL');
   const [roleFilter, setRoleFilter] = React.useState<Role | 'ALL'>('ALL');
-  const [positionFilter, setPositionFilter] = React.useState<string>('ALL');
 
   const filtered = React.useMemo(() => {
     const q = search.trim().toLowerCase();
-    return members.filter((m) => {
-      if (q && !`${m.name} ${m.email}`.toLowerCase().includes(q)) return false;
-      if (statusFilter === 'ACTIVE' && !m.isActive) return false;
-      if (statusFilter === 'INACTIVE' && m.isActive) return false;
-      if (roleFilter !== 'ALL' && m.role !== roleFilter) return false;
-      if (positionFilter !== 'ALL' && m.boardPositionId !== positionFilter) return false;
+    return rows.filter((r) => {
+      if (q && !`${r.name} ${r.email ?? ''} ${r.portfolio ?? ''}`.toLowerCase().includes(q)) return false;
+      if (statusFilter === 'ACTIVE' && !r.isActive) return false;
+      if (statusFilter === 'INACTIVE' && r.isActive) return false;
+      if (roleFilter !== 'ALL' && r.role !== roleFilter) return false;
       return true;
     });
-  }, [members, search, statusFilter, roleFilter, positionFilter]);
+  }, [rows, search, statusFilter, roleFilter]);
+
+  function close() {
+    setModal(null);
+    router.refresh();
+  }
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <div className="relative sm:col-span-2 lg:col-span-2">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="relative sm:col-span-2">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name or email…"
+            placeholder="Search by name, email or portfolio…"
             className="pl-9"
             aria-label="Search members"
           />
@@ -91,98 +90,98 @@ export function MemberManager({
             </option>
           ))}
         </Select>
-        <Select aria-label="Filter by board position" value={positionFilter} onChange={(e) => setPositionFilter(e.target.value)}>
-          <option value="ALL">All board positions</option>
-          {positions.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.title}
-            </option>
-          ))}
-        </Select>
       </div>
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-ink-500">
-          {filtered.length} of {members.length} member{members.length === 1 ? '' : 's'}
+          {filtered.length} of {rows.length} member{rows.length === 1 ? '' : 's'}
         </p>
-        <Button onClick={() => setEditing('new')}>
+        <Button onClick={() => setModal({ kind: 'roster-form' })}>
           <Plus className="h-4 w-4" /> Add member
         </Button>
       </div>
 
-      {editing ? (
-        <MemberForm
-          member={editing === 'new' ? undefined : editing}
-          avenues={avenues}
-          positions={positions}
-          onDone={() => {
-            setEditing(null);
-            router.refresh();
-          }}
-          onCancel={() => setEditing(null)}
-        />
+      {modal?.kind === 'roster-form' ? (
+        <RosterForm row={modal.row} onDone={close} onCancel={() => setModal(null)} />
+      ) : modal?.kind === 'user-form' ? (
+        <StandaloneUserForm row={modal.row} positions={positions} onDone={close} onCancel={() => setModal(null)} />
+      ) : modal?.kind === 'create-login' ? (
+        <CreateLoginForm row={modal.row} onDone={close} onCancel={() => setModal(null)} />
       ) : null}
 
       <div className="overflow-x-auto rounded-2xl border border-ink-200 bg-white">
-        <table className="w-full min-w-[820px] text-left text-sm">
+        <table className="w-full min-w-[720px] text-left text-sm">
           <thead>
             <tr className="border-b border-ink-200 text-xs uppercase tracking-wide text-ink-500">
-              <th className="px-4 py-3 font-medium">Member</th>
-              <th className="px-4 py-3 font-medium">Role</th>
-              <th className="px-4 py-3 font-medium">Board position</th>
-              <th className="px-4 py-3 font-medium">Avenue</th>
-              <th className="px-4 py-3 text-right font-medium">Events</th>
+              <th className="px-4 py-3 font-medium">Name</th>
+              <th className="px-4 py-3 font-medium">Portfolio</th>
+              <th className="px-4 py-3 font-medium">System Role</th>
               <th className="px-4 py-3 font-medium">Status</th>
               <th className="px-4 py-3 text-right font-medium">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-ink-100">
-            {filtered.map((member) => (
-              <tr key={member.id} className={member.isActive ? '' : 'opacity-60'}>
+            {filtered.map((row) => (
+              <tr key={`${row.kind}-${row.id}`} className={row.isActive ? '' : 'opacity-60'}>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <Avatar name={member.name} src={member.image} size={34} />
+                    <Avatar name={row.name} src={row.image} size={34} />
                     <div className="min-w-0">
-                      <p className="truncate font-medium text-ink-800">{member.name}</p>
-                      <p className="truncate text-xs text-ink-500">{member.email}</p>
+                      <p className="truncate font-medium text-ink-800">{row.name}</p>
+                      <p className="truncate text-xs text-ink-500">{row.email ?? 'No login yet'}</p>
                     </div>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-ink-600">{ROLE_LABELS[member.role]}</td>
-                <td className="px-4 py-3 text-ink-600">{member.boardPosition?.title ?? '—'}</td>
-                <td className="px-4 py-3 text-ink-600">{avenues.find((a) => a.id === member.avenueId)?.name ?? '—'}</td>
-                <td className="px-4 py-3 text-right tabular-nums text-ink-600">{member._count?.createdEvents ?? 0}</td>
+                <td className="px-4 py-3 text-ink-600">{row.portfolio ?? '—'}</td>
+                <td className="px-4 py-3">
+                  <span className="text-ink-600">{ROLE_LABELS[row.role as Role]}</span>
+                  {!row.hasLogin ? <span className="ml-1.5 text-xs text-ink-400">(pending login)</span> : null}
+                </td>
                 <td className="px-4 py-3">
                   <span
                     className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                      member.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-ink-100 text-ink-500'
+                      row.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-ink-100 text-ink-500'
                     }`}
                   >
-                    {member.isActive ? 'Active' : 'Inactive'}
+                    {row.isActive ? 'Active' : 'Inactive'}
                   </span>
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex justify-end gap-1">
+                    {row.kind === 'roster' && !row.hasLogin ? (
+                      <button
+                        type="button"
+                        aria-label={`Create login for ${row.name}`}
+                        title="Create login"
+                        onClick={() => setModal({ kind: 'create-login', row })}
+                        className="rounded-lg p-2 text-ink-400 hover:bg-ink-100 hover:text-ink-700"
+                      >
+                        <KeyRound className="h-4 w-4" />
+                      </button>
+                    ) : null}
                     <button
                       type="button"
-                      aria-label={`Edit ${member.name}`}
-                      onClick={() => setEditing(member)}
+                      aria-label={`Edit ${row.name}`}
+                      onClick={() => setModal(row.kind === 'roster' ? { kind: 'roster-form', row } : { kind: 'user-form', row })}
                       className="rounded-lg p-2 text-ink-400 hover:bg-ink-100 hover:text-ink-700"
                     >
                       <Pencil className="h-4 w-4" />
                     </button>
-                    {member.id !== currentUserId ? (
+                    {row.userId !== currentUserId ? (
                       <button
                         type="button"
-                        aria-label={member.isActive ? `Deactivate ${member.name}` : `Reactivate ${member.name}`}
+                        aria-label={row.isActive ? `Deactivate ${row.name}` : `Reactivate ${row.name}`}
                         onClick={async () => {
-                          const result = await setMemberActiveAction(member.id, !member.isActive);
+                          const result =
+                            row.kind === 'roster'
+                              ? await setRosterMemberActiveAction(row.id, !row.isActive)
+                              : await setMemberActiveAction(row.id, !row.isActive);
                           toast[result.ok ? 'success' : 'error'](result.message ?? '');
                           router.refresh();
                         }}
                         className="rounded-lg p-2 text-ink-400 hover:bg-ink-100 hover:text-ink-700"
                       >
-                        {member.isActive ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
+                        {row.isActive ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
                       </button>
                     ) : null}
                   </div>
@@ -191,7 +190,7 @@ export function MemberManager({
             ))}
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-sm text-ink-500">
+                <td colSpan={5} className="px-4 py-8 text-center text-sm text-ink-500">
                   No members match these filters.
                 </td>
               </tr>
@@ -203,47 +202,193 @@ export function MemberManager({
   );
 }
 
-function MemberForm({
-  member,
-  avenues,
+/** Add/edit a roster entry — name, portfolio, system role. No email, no password. */
+function RosterForm({ row, onDone, onCancel }: { row?: MemberRow; onDone: () => void; onCancel: () => void }) {
+  const toast = useToast();
+  const [values, setValues] = React.useState({
+    name: row?.name ?? '',
+    portfolio: row?.portfolio ?? '',
+    intendedRole: (row?.role ?? 'BOARD_MEMBER') as Role,
+    isActive: row?.isActive ?? true,
+  });
+  const [errors, setErrors] = React.useState<Record<string, string>>({});
+  const [pending, setPending] = React.useState(false);
+  const set = (key: keyof typeof values, value: unknown) => setValues((c) => ({ ...c, [key]: value }));
+
+  return (
+    <form
+      className="card space-y-4 p-5"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        setPending(true);
+        const result = await upsertRosterMemberAction(row?.kind === 'roster' ? row.id : null, values);
+        setPending(false);
+        if (!result.ok) {
+          setErrors(result.fieldErrors ?? {});
+          toast.error('Member not saved', result.message);
+          return;
+        }
+        toast.success(result.message ?? 'Saved');
+        onDone();
+      }}
+    >
+      <div className="flex items-center justify-between">
+        <h3 className="text-base font-semibold text-ink-800">{row ? `Edit ${row.name}` : 'Add a member'}</h3>
+        <button type="button" onClick={onCancel} aria-label="Close" className="rounded-lg p-2 text-ink-400 hover:bg-ink-100">
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      {!row ? (
+        <p className="text-xs text-ink-500">
+          Add them to the roster first — no email needed yet. Once they're ready to sign in, use{' '}
+          <strong>Create login</strong> from the table.
+        </p>
+      ) : row.hasLogin ? (
+        <p className="text-xs text-ink-500">
+          {row.name} already has a login ({row.email}) — System Role here updates their real permissions immediately.
+        </p>
+      ) : null}
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Full name" required error={errors.name}>
+          {(props) => <Input {...props} value={values.name} onChange={(e) => set('name', e.target.value)} placeholder="Rtr. Name" />}
+        </Field>
+        <Field label="Portfolio" optional hint="Their Rotaract designation, e.g. Web Service Chair.">
+          {(props) => <Input {...props} value={values.portfolio} onChange={(e) => set('portfolio', e.target.value)} />}
+        </Field>
+        <Field label="System role" required hint="Controls what they can do once they have a login.">
+          {(props) => (
+            <Select {...props} value={values.intendedRole} onChange={(e) => set('intendedRole', e.target.value as Role)}>
+              {Object.entries(ROLE_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </Select>
+          )}
+        </Field>
+      </div>
+
+      <Toggle
+        checked={values.isActive}
+        onChange={(v) => set('isActive', v)}
+        label="Active"
+        description={
+          row?.hasLogin
+            ? 'Inactive members cannot sign in, but their past reports stay intact.'
+            : "This only matters once they have a login — it's who to show as active on the roster until then."
+        }
+      />
+
+      <div className="flex gap-2">
+        <Button type="submit" loading={pending}>
+          {row ? 'Save member' : 'Add member'}
+        </Button>
+        <Button type="button" variant="ghost" onClick={onCancel}>
+          Cancel
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+/** Give an existing roster entry its first login — the only place their email is ever collected. */
+function CreateLoginForm({ row, onDone, onCancel }: { row: MemberRow; onDone: () => void; onCancel: () => void }) {
+  const toast = useToast();
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [errors, setErrors] = React.useState<Record<string, string>>({});
+  const [pending, setPending] = React.useState(false);
+
+  return (
+    <form
+      className="card space-y-4 p-5"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        setPending(true);
+        const result = await createLoginForRosterMemberAction(row.id, { email, password });
+        setPending(false);
+        if (!result.ok) {
+          setErrors(result.fieldErrors ?? {});
+          toast.error('Login not created', result.message);
+          return;
+        }
+        toast.success(result.message ?? 'Login created');
+        onDone();
+      }}
+    >
+      <div className="flex items-center justify-between">
+        <h3 className="text-base font-semibold text-ink-800">Create a login for {row.name}</h3>
+        <button type="button" onClick={onCancel} aria-label="Close" className="rounded-lg p-2 text-ink-400 hover:bg-ink-100">
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+      <p className="text-xs text-ink-500">
+        Role: <strong>{ROLE_LABELS[row.role as Role]}</strong> · Portfolio: <strong>{row.portfolio ?? '—'}</strong>. Change
+        either from Edit first if needed.
+      </p>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Email" required error={errors.email} hint="This is also their Google sign-in address.">
+          {(props) => <Input {...props} type="email" value={email} onChange={(e) => setEmail(e.target.value)} />}
+        </Field>
+        <Field label="Password" optional error={errors.password} hint="Leave blank if they will sign in with Google.">
+          {(props) => (
+            <Input {...props} type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
+          )}
+        </Field>
+      </div>
+
+      <div className="flex gap-2">
+        <Button type="submit" loading={pending}>
+          Create login
+        </Button>
+        <Button type="button" variant="ghost" onClick={onCancel}>
+          Cancel
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+/** Full editor for legacy standalone User rows (not on the roster) — unchanged from before. */
+function StandaloneUserForm({
+  row,
   positions,
   onDone,
   onCancel,
 }: {
-  member?: MemberRow;
-  avenues: Array<{ id: string; name: string }>;
+  row: MemberRow;
   positions: Array<{ id: string; title: string }>;
   onDone: () => void;
   onCancel: () => void;
 }) {
   const toast = useToast();
   const [values, setValues] = React.useState({
-    name: member?.name ?? '',
-    email: member?.email ?? '',
-    phone: member?.phone ?? '',
-    rotaractId: member?.rotaractId ?? '',
-    role: (member?.role ?? 'BOARD_MEMBER') as Role,
-    boardPositionId: member?.boardPositionId ?? '',
-    avenueId: member?.avenueId ?? '',
-    isActive: member?.isActive ?? true,
+    name: row.name,
+    email: row.email ?? '',
+    phone: row.phone ?? '',
+    rotaractId: row.rotaractId ?? '',
+    role: row.role as Role,
+    boardPositionId: row.boardPositionId ?? '',
+    avenueId: row.avenueId ?? '',
+    isActive: row.isActive,
     password: '',
   });
   const [errors, setErrors] = React.useState<Record<string, string>>({});
   const [pending, setPending] = React.useState(false);
   const [photoFile, setPhotoFile] = React.useState<File | null>(null);
-  const [photoPreview, setPhotoPreview] = React.useState<string | null>(member?.image ?? null);
+  const [photoPreview, setPhotoPreview] = React.useState<string | null>(row.image ?? null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-
   const set = (key: keyof typeof values, value: unknown) => setValues((c) => ({ ...c, [key]: value }));
 
-  async function uploadPhoto(memberId: string, file: File) {
+  async function uploadPhoto(userId: string, file: File) {
     const form = new FormData();
     form.append('file', file);
-    const res = await fetch(`/api/members/${memberId}/photo`, { method: 'POST', body: form });
+    const res = await fetch(`/api/members/${userId}/photo`, { method: 'POST', body: form });
     const data = await res.json();
-    if (!res.ok || data.error) {
-      toast.error('Photo not saved', data.error ?? 'The member was saved, but the photo upload failed.');
-    }
+    if (!res.ok || data.error) toast.error('Photo not saved', data.error ?? 'The member was saved, but the photo upload failed.');
   }
 
   return (
@@ -252,36 +397,30 @@ function MemberForm({
       onSubmit={async (e) => {
         e.preventDefault();
         setPending(true);
-        const result = await upsertMemberAction(member?.id ?? null, values);
+        const result = await upsertMemberAction(row.id, values);
         if (!result.ok) {
           setPending(false);
           setErrors(result.fieldErrors ?? {});
           toast.error('Member not saved', result.message);
           return;
         }
-        if (photoFile && result.data?.id) {
-          await uploadPhoto(result.data.id, photoFile);
-        }
+        if (photoFile && result.data?.id) await uploadPhoto(result.data.id, photoFile);
         setPending(false);
         toast.success(result.message ?? 'Saved');
         onDone();
       }}
     >
       <div className="flex items-center justify-between">
-        <h3 className="text-base font-semibold text-ink-800">{member ? `Edit ${member.name}` : 'Add a member'}</h3>
+        <h3 className="text-base font-semibold text-ink-800">Edit {row.name}</h3>
         <button type="button" onClick={onCancel} aria-label="Close" className="rounded-lg p-2 text-ink-400 hover:bg-ink-100">
           <X className="h-4 w-4" />
         </button>
       </div>
+      <p className="text-xs text-ink-500">This account isn't on the official roster — editing here only changes the login record.</p>
 
       <div className="flex items-center gap-4">
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="group relative"
-          aria-label="Upload profile photo"
-        >
-          <Avatar name={values.name || 'New member'} src={photoPreview} size={56} />
+        <button type="button" onClick={() => fileInputRef.current?.click()} className="group relative" aria-label="Upload profile photo">
+          <Avatar name={values.name || 'Member'} src={photoPreview} size={56} />
           <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-brand-600 text-white shadow-sm transition group-hover:bg-brand-700">
             <Camera className="h-3.5 w-3.5" />
           </span>
@@ -306,12 +445,12 @@ function MemberForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Full name" required error={errors.name}>
-          {(props) => <Input {...props} value={values.name} onChange={(e) => set('name', e.target.value)} placeholder="Rtr. Name" />}
+          {(props) => <Input {...props} value={values.name} onChange={(e) => set('name', e.target.value)} />}
         </Field>
-        <Field label="Email" required error={errors.email} hint="This is also their Google sign-in address.">
+        <Field label="Email" required error={errors.email}>
           {(props) => <Input {...props} type="email" value={values.email} onChange={(e) => set('email', e.target.value)} />}
         </Field>
-        <Field label="Designation" required error={errors.boardPositionId} hint="Their board position or title in the club.">
+        <Field label="Designation" required error={errors.boardPositionId}>
           {(props) => (
             <Select {...props} value={values.boardPositionId} onChange={(e) => set('boardPositionId', e.target.value)}>
               <option value="" disabled>
@@ -342,24 +481,7 @@ function MemberForm({
         <Field label="Rotaract ID" optional>
           {(props) => <Input {...props} value={values.rotaractId} onChange={(e) => set('rotaractId', e.target.value)} />}
         </Field>
-        <Field label="Avenue (for directors)" optional hint="Directors review the reports filed under their avenue.">
-          {(props) => (
-            <Select {...props} value={values.avenueId} onChange={(e) => set('avenueId', e.target.value)}>
-              <option value="">None</option>
-              {avenues.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.name}
-                </option>
-              ))}
-            </Select>
-          )}
-        </Field>
-        <Field
-          label={member ? 'Set a new password' : 'Password'}
-          optional
-          error={errors.password}
-          hint="Leave blank if they will sign in with Google."
-        >
+        <Field label="Set a new password" optional error={errors.password} hint="Leave blank if they will sign in with Google.">
           {(props) => (
             <Input {...props} type="password" value={values.password} onChange={(e) => set('password', e.target.value)} autoComplete="new-password" />
           )}
@@ -375,7 +497,7 @@ function MemberForm({
 
       <div className="flex gap-2">
         <Button type="submit" loading={pending}>
-          {member ? 'Save member' : 'Add member'}
+          Save member
         </Button>
         <Button type="button" variant="ghost" onClick={onCancel}>
           Cancel
